@@ -11,3 +11,199 @@ generator client {
 datasource db {
   provider = "mysql"
 }
+
+enum Role {
+  USER
+  AGENT
+  ADMIN
+}
+
+enum PropertyStatus {
+  DRAFT
+  ACTIVE
+  SOLD
+  OFF_MARKET
+}
+
+enum OpenHouseStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum UserOpenHouseStatus {
+  UPCOMING
+  ATTENDED
+  EXPIRED
+}
+
+enum NotificationType {
+  NEW_OPEN_HOUSE
+  PRICE_CHANGE
+  STATUS_CHANGE
+}
+
+model User {
+  user_id       Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  password_hash String
+  phone         String?
+  role          Role     @default(USER)
+  status        String   @default("ACTIVE")
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  agentProfile    AgentProfile?
+  savedProperties SavedProperty[]
+  userOpenHouses  UserOpenHouse[]
+  notes           Note[]
+  notifications   Notification[]
+}
+
+model Agency {
+  agency_id  Int      @id @default(autoincrement())
+  name       String
+  address    String?
+  suburb     String?
+  state      String?
+  postcode   String?
+  phone      String?
+  email      String?
+  website    String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  agents AgentProfile[]
+}
+
+model AgentProfile {
+  agent_id       Int      @id @default(autoincrement())
+  user_id        Int      @unique
+  agency_id      Int
+  bio            String?
+  profile_image  String?
+  license_number String
+  website        String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  user              User                   @relation(fields: [user_id], references: [user_id])
+  agency            Agency                 @relation(fields: [agency_id], references: [agency_id])
+  trackedProperties AgentTrackedProperty[]
+}
+
+model Property {
+  property_id   Int            @id @default(autoincrement())
+  address       String
+  suburb        String
+  state         String
+  postcode      String
+  price         Int
+  bedrooms      Int
+  bathrooms     Int
+  property_type String
+  latitude      Float?
+  longitude     Float?
+  description   String?        @db.Text
+  status        PropertyStatus @default(DRAFT)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  savedBy         SavedProperty[]
+  openHouses      OpenHouse[]
+  images          PropertyImage[]
+  notes           Note[]
+  trackedByAgents AgentTrackedProperty[]
+  notifications   Notification[]
+}
+
+model SavedProperty {
+  saved_property_id Int      @id @default(autoincrement())
+  user_id           Int
+  property_id       Int
+  saved_at          DateTime @default(now())
+
+  user     User     @relation(fields: [user_id], references: [user_id])
+  property Property @relation(fields: [property_id], references: [property_id])
+
+  @@unique([user_id, property_id])
+}
+
+model OpenHouse {
+  openhouse_id   Int             @id @default(autoincrement())
+  property_id    Int
+  start_datetime DateTime
+  end_datetime   DateTime
+  status         OpenHouseStatus @default(SCHEDULED)
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
+
+  property       Property        @relation(fields: [property_id], references: [property_id])
+  userOpenHouses UserOpenHouse[]
+  notifications  Notification[]
+}
+
+model PropertyImage {
+  image_id    Int      @id @default(autoincrement())
+  property_id Int
+  image_url   String
+  is_primary  Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  property Property @relation(fields: [property_id], references: [property_id])
+}
+
+model AgentTrackedProperty {
+  tracked_id  Int      @id @default(autoincrement())
+  agent_id    Int
+  property_id Int
+  created_at  DateTime @default(now())
+
+  agent    AgentProfile @relation(fields: [agent_id], references: [agent_id])
+  property Property     @relation(fields: [property_id], references: [property_id])
+
+  @@unique([agent_id, property_id])
+}
+
+model Note {
+  note_id     Int      @id @default(autoincrement())
+  property_id Int
+  user_id     Int
+  content     String   @db.Text
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  property Property @relation(fields: [property_id], references: [property_id])
+  user     User     @relation(fields: [user_id], references: [user_id])
+}
+
+model UserOpenHouse {
+  user_openHouse_id Int                 @id @default(autoincrement())
+  user_id           Int
+  openhouse_id      Int
+  status            UserOpenHouseStatus @default(UPCOMING)
+  created_at        DateTime            @default(now())
+
+  user      User      @relation(fields: [user_id], references: [user_id])
+  openHouse OpenHouse @relation(fields: [openhouse_id], references: [openhouse_id])
+
+  @@unique([user_id, openhouse_id])
+}
+
+model Notification {
+  notification_id Int              @id @default(autoincrement())
+  user_id         Int
+  property_id     Int
+  openhouse_id    Int
+  type            NotificationType
+  message         String
+  is_read         Boolean          @default(false)
+  created_at      DateTime         @default(now())
+
+  user      User      @relation(fields: [user_id], references: [user_id])
+  property  Property  @relation(fields: [property_id], references: [property_id])
+  openHouse OpenHouse @relation(fields: [openhouse_id], references: [openhouse_id])
+
+  @@unique([user_id, openhouse_id, type])
+}
