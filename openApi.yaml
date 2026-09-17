@@ -43,3 +43,36 @@ paths:
           description: Validation failed
         '409':
           description: Email is already registered
+  /api/auth/login:
+    post:
+      summary: Authenticate a USER, AGENT, or ADMIN account
+      description: Verifies credentials and rejects disabled accounts. Returns a JWT token and the authenticated user's role.
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: test@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+      responses:
+        '200':
+          description: Login successful
+        '400':
+          description: Validation failed
+        '401':
+          description: Invalid email or password
+        '403':
+          description: Account is disabled

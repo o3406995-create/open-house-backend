@@ -38,30 +38,26 @@ export const authService = {
     const user = await userRepository.findByEmail(input.email)
 
     if (!user) {
-        throw new AppError("Invalid email or password.", 401)
+      throw new AppError("Invalid email or password.", 401)
     }
 
     const isPasswordValid = await bcrypt.compare(input.password, user.password_hash)
 
     if (!isPasswordValid) {
-        throw new AppError("Invalid email or password.", 401)
+      throw new AppError("Invalid email or password.", 401)
     }
 
     if (user.status !== "ACTIVE") {
-        throw new AppError("Invalid email or password.", 401)
-    }
-
-    if (user.status !== "ACTIVE") {
-        throw new AppError("This account has been disabled.", 403)
+      throw new AppError("This account has been disabled.", 403)
     }
 
     const token = jwt.sign(
-        {
-            sub: user.user_id,
-            role: user.role,
-        },
-        requireEnv("JWT_SECRET"),
-        { expiresIn: "24h" },
+      {
+        sub: String(user.user_id),
+        role: user.role,
+      },
+      requireEnv("JWT_SECRET"),
+      { expiresIn: "24h" },
     )
     const { password_hash: _omit, ...safeUser } = user
 

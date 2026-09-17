@@ -24,21 +24,20 @@ export const authController = {
 
   login: async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const parsed = loginSchema.safeParse(req.body)
+      const parsed = loginSchema.safeParse(req.body)
 
-        if (!parsed.success) {
-            return res.status(400).json({
-                message: "Validation failed",
-                errors: parsed.error.flatten().fieldErrors,
-                
-            })
-        }
-        const { token, user } = await authService.login(parsed.data)
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: parsed.error.flatten().fieldErrors,
+        })
+      }
 
-        return res.status(200).json({ token, user })
+      const { token, user } = await authService.login(parsed.data)
+
+      return res.status(200).json({ token, user })
     } catch (err) {
-        next(err)
+      next(err)
     }
-
-  }
+  },
 }
