@@ -48,16 +48,12 @@ export const authService = {
     }
 
     if (user.status !== "ACTIVE") {
-        throw new AppError("Invalid email or password.", 401)
-    }
-
-    if (user.status !== "ACTIVE") {
         throw new AppError("This account has been disabled.", 403)
     }
 
     const token = jwt.sign(
         {
-            sub: user.user_id,
+            sub: String(user.user_id),
             role: user.role,
         },
         requireEnv("JWT_SECRET"),
