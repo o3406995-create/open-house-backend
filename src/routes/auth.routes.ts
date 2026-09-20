@@ -49,7 +49,7 @@ router.post("/register", authController.register)
  * /api/auth/login:
  *   post:
  *     summary: Authenticate a USER, AGENT, or ADMIN account
- *     description: Verifies credentials and rejects disabled accounts. Returns a JWT token and the authenticated user's role.
+ *     description: Verifies credentials and rejects disabled accounts. On success the JWT is set in an HttpOnly cookie named "token" and the authenticated user is returned in the response body.
  *     tags:
  *       - Auth
  *     requestBody:
@@ -72,14 +72,17 @@ router.post("/register", authController.register)
  *                 example: password123
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: Login successful. The token is set in an HttpOnly cookie (Set-Cookie header).
+ *         headers:
+ *           Set-Cookie:
+ *             description: HttpOnly cookie named "token" containing the JWT
+ *             schema:
+ *               type: string
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 token:
- *                   type: string
  *                 user:
  *                   type: object
  *                   properties:
@@ -100,5 +103,27 @@ router.post("/register", authController.register)
  *         description: Account is disabled
  */
 router.post("/login", authController.login)
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Log out the current user
+ *     description: Clears the HttpOnly "token" cookie. Safe to call even when not logged in.
+ *     tags:
+ *       - Auth
+ *     responses:
+ *       200:
+ *         description: Logged out. The token cookie is cleared via the Set-Cookie header.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Logged out
+ */
+router.post("/logout", authController.logout)
 
 export default router

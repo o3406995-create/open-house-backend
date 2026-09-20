@@ -42,11 +42,20 @@ export const authController = {
           maxAge: 24 * 60 * 60 * 1000,
           path: "/",
         })
-        
+
         return res.status(200).json({ user })
     } catch (err) {
         next(err)
     }
 
-  }
+  },
+  logout: (_req: Request, res: Response) => {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    })
+    return res.status(200).json({ message: "Logged out" })
+  },
 }

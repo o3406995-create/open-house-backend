@@ -4,6 +4,7 @@ import swaggerUi from "swagger-ui-express"
 import swaggerSpec from "./lib/swagger.js"
 import authRoutes from "./routes/auth.routes.js"
 import { errorHandler } from "./middleware/errorHandler.js"
+import cookieParser from "cookie-parser"
 
 const app = express()
 const PORT = 3000
@@ -18,6 +19,7 @@ app.use(
 )
 
 app.use(express.json())
+app.use(cookieParser())
 
 app.get("/", (req, res) => {
   res.send("OpenHouse backend is running")
