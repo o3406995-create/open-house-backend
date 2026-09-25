@@ -14,6 +14,17 @@ function requireEnv(name: string): string {
   return value
 }
 
+function generateToken(user: { user_id: number | string; role: string }): string {
+  return jwt.sign(
+    {
+      sub: String(user.user_id),
+      role: user.role,
+    },
+    requireEnv("JWT_SECRET"),
+    { expiresIn: "24h" },
+  )
+}
+
 export const authService = {
   register: async (input: RegisterInput) => {
     const existingUser = await userRepository.findByEmail(input.email)
@@ -30,8 +41,10 @@ export const authService = {
       password_hash,
     })
 
+    const token = generateToken(user);
+
     const { password_hash: _omit, ...safeUser } = user
-    return safeUser
+    return { token, user: safeUser }
   },
 
   login: async (input: LoginInput) => {
@@ -51,14 +64,7 @@ export const authService = {
         throw new AppError("This account has been disabled.", 403)
     }
 
-    const token = jwt.sign(
-        {
-            sub: String(user.user_id),
-            role: user.role,
-        },
-        requireEnv("JWT_SECRET"),
-        { expiresIn: "24h" },
-    )
+    const token = generateToken(user);
     const { password_hash: _omit, ...safeUser } = user
 
     return { token, user: safeUser }
