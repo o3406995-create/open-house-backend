@@ -1,5 +1,6 @@
 import { Router } from "express"
 import { authController } from "../controllers/auth.controller.js"
+import { requireAuth } from "../middleware/auth.middleware.js"
 
 const router = Router()
 
@@ -125,5 +126,39 @@ router.post("/login", authController.login)
  *                   example: Logged out
  */
 router.post("/logout", authController.logout)
+
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get the currently authenticated user
+ *     description: Returns the current user based on the JWT in the "token" cookie.
+ *     tags:
+ *       - Auth
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user returned successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     user_id:
+ *                       type: integer
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *       401:
+ *         description: Not authenticated
+ */
+router.get("/me", requireAuth, authController.getCurrentUser)
 
 export default router

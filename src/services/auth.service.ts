@@ -69,4 +69,15 @@ export const authService = {
 
     return { token, user: safeUser }
   },
+  
+  getCurrentUser: async (userId: string) => {
+    const user = await userRepository.findById(Number(userId))
+
+    if (!user) {
+      throw new AppError("User not found.", 404)
+    }
+
+    const { password_hash: _omit, ...safeUser } = user
+    return safeUser
+  },
 }

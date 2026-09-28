@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express"
 import { registerSchema, loginSchema } from "../validators/auth.validator.js"
 import { authService } from "../services/auth.service.js"
+import type { AuthenticatedRequest } from "../middleware/auth.middleware.js"
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -61,5 +62,13 @@ export const authController = {
       path: "/",
     })
     return res.status(200).json({ message: "Logged out" })
+  },
+  getCurrentUser: async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const user = await authService.getCurrentUser(req.userId!)
+      return res.status(200).json({ user })
+    } catch (err) {
+      next(err)
+    }
   },
 }
