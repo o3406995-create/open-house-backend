@@ -1,8 +1,10 @@
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import { userRepository } from "../repositories/user.repository.js"
+import { loggerRepository } from "../repositories/logger.repository.js"
 import { AppError } from "../lib/AppError.js"
 import type { RegisterInput, LoginInput } from "../validators/auth.validator.js"
+import { string } from "zod"
 
 const SALT_ROUNDS = 10
 
@@ -14,8 +16,23 @@ function requireEnv(name: string): string {
   return value
 }
 
+function generateToken(user: {user_id: number; role: string}): string {
+  return jwt.sign(
+    { sub: String(user.user_id),
+      role: user.role
+    },
+    requireEnv("JWT_SECRET"),
+    { expiresIn: "24h" },
+  )
+}
+
+interface RequestMeta {
+  ip_address?: string | undefined
+  user_agent?: string | undefined
+}
+
 export const authService = {
-  register: async (input: RegisterInput) => {
+  register: async (input: RegisterInput, meta: RequestMeta) => {
     const existingUser = await userRepository.findByEmail(input.email)
 
     if (existingUser) {
@@ -30,11 +47,19 @@ export const authService = {
       password_hash,
     })
 
+    const token = generateToken(user)
+
+    await loggerRepository.create({
+      user_id: user.user_id,
+      action: "REGISTER",
+      ip_address: meta.ip_address,
+      user_agent: meta.user_agent,
+    })
     const { password_hash: _omit, ...safeUser } = user
-    return safeUser
+    return { token, user: safeUser }
   },
 
-  login: async (input: LoginInput) => {
+  login: async (input: LoginInput, meta: RequestMeta) => {
     const user = await userRepository.findByEmail(input.email)
 
     if (!user) {
@@ -51,14 +76,14 @@ export const authService = {
         throw new AppError("This account has been disabled.", 403)
     }
 
-    const token = jwt.sign(
-        {
-            sub: String(user.user_id),
-            role: user.role,
-        },
-        requireEnv("JWT_SECRET"),
-        { expiresIn: "24h" },
-    )
+    const token = generateToken(user)
+    
+    await loggerRepository.create({
+      user_id: user.user_id,
+      action: "LOGIN",
+      ip_address: meta.ip_address,
+      user_agent: meta.user_agent,
+    })
     const { password_hash: _omit, ...safeUser } = user
 
     return { token, user: safeUser }

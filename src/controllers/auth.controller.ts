@@ -2,6 +2,14 @@ import type { Request, Response, NextFunction } from "express"
 import { registerSchema, loginSchema } from "../validators/auth.validator.js"
 import { authService } from "../services/auth.service.js"
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  maxAge: 24 * 60 * 60 * 1000,
+  path: "/",
+}
+
 export const authController = {
   register: async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -14,8 +22,12 @@ export const authController = {
         })
       }
 
-      const user = await authService.register(parsed.data)
+      const { token, user } = await authService.register(parsed.data, {
+        ip_address: req.ip,
+        user_agent: req.headers["user-agent"],
+      })
 
+      res.cookie("token", token, COOKIE_OPTIONS)
       return res.status(201).json({ user })
     } catch (err) {
       next(err)
@@ -33,15 +45,12 @@ export const authController = {
                 
             })
         }
-        const { token, user } = await authService.login(parsed.data)
-
-        res.cookie("token", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 24 * 60 * 60 * 1000,
-          path: "/",
+        const { token, user } = await authService.login(parsed.data, {
+          ip_address: req.ip,
+          user_agent: req.headers["user-agent"],
         })
+
+        res.cookie("token", token, COOKIE_OPTIONS)
 
         return res.status(200).json({ user })
     } catch (err) {

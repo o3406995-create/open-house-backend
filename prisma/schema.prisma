@@ -43,6 +43,11 @@ enum NotificationType {
   STATUS_CHANGE
 }
 
+enum LogAction {
+  REGISTER
+  LOGIN
+}
+
 model User {
   user_id       Int      @id @default(autoincrement())
   name          String
@@ -59,6 +64,7 @@ model User {
   userOpenHouses  UserOpenHouse[]
   notes           Note[]
   notifications   Notification[]
+  logs            Logger[]
 }
 
 model Agency {
@@ -206,4 +212,15 @@ model Notification {
   openHouse OpenHouse @relation(fields: [openhouse_id], references: [openhouse_id])
 
   @@unique([user_id, openhouse_id, type])
+}
+
+model Logger {
+  logger_id  Int       @id @default(autoincrement())
+  user_id    Int
+  action     LogAction
+  ip_address String?
+  user_agent String?
+  created_at DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id])
 }
