@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import { userRepository } from "../repositories/user.repository.js"
-import { loggerRepository } from "../repositories/logger.repository.js"
+import { activityLogRepository } from "../repositories/activityLog.repository.js"
 import { AppError } from "../lib/AppError.js"
 import type { RegisterInput, LoginInput } from "../validators/auth.validator.js"
 import { string } from "zod"
@@ -24,6 +24,23 @@ function generateToken(user: {user_id: number; role: string}): string {
     requireEnv("JWT_SECRET"),
     { expiresIn: "24h" },
   )
+}
+
+async function logActivity(
+  user_id: number,
+  action: "REGISTER" | "LOGIN",
+  meta: RequestMeta,
+): Promise<void> {
+  try {
+    await activityLogRepository.create({
+      user_id,
+      action,
+      ip_address: meta.ip_address,
+      user_agent: meta.user_agent,
+    })
+  } catch (err) {
+    console.error(`Failed to log ${action} activity for user ${user_id}:`, err)
+  }
 }
 
 interface RequestMeta {
@@ -49,12 +66,8 @@ export const authService = {
 
     const token = generateToken(user)
 
-    await loggerRepository.create({
-      user_id: user.user_id,
-      action: "REGISTER",
-      ip_address: meta.ip_address,
-      user_agent: meta.user_agent,
-    })
+    await logActivity(user.user_id, "REGISTER", meta)
+
     const { password_hash: _omit, ...safeUser } = user
     return { token, user: safeUser }
   },
@@ -78,12 +91,8 @@ export const authService = {
 
     const token = generateToken(user)
     
-    await loggerRepository.create({
-      user_id: user.user_id,
-      action: "LOGIN",
-      ip_address: meta.ip_address,
-      user_agent: meta.user_agent,
-    })
+    await logActivity(user.user_id, "LOGIN", meta)
+
     const { password_hash: _omit, ...safeUser } = user
 
     return { token, user: safeUser }

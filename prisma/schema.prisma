@@ -64,7 +64,7 @@ model User {
   userOpenHouses  UserOpenHouse[]
   notes           Note[]
   notifications   Notification[]
-  logs            Logger[]
+  activityLogs    ActivityLog[]
 }
 
 model Agency {
@@ -214,13 +214,13 @@ model Notification {
   @@unique([user_id, openhouse_id, type])
 }
 
-model Logger {
-  logger_id  Int       @id @default(autoincrement())
-  user_id    Int
+model ActivityLog {
+  log_id     Int       @id @default(autoincrement())
+  user_id    Int?
   action     LogAction
   ip_address String?
   user_agent String?
   created_at DateTime  @default(now())
 
-  user User @relation(fields: [user_id], references: [user_id])
+  user User? @relation(fields: [user_id], references: [user_id])
 }
