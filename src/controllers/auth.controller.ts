@@ -46,6 +46,7 @@ export const authController = {
                 
             })
         }
+
         const { token, user } = await authService.login(parsed.data, {
           ip_address: req.ip,
           user_agent: req.headers["user-agent"],
@@ -77,5 +78,13 @@ export const authController = {
       path: "/",
     })
     return res.status(200).json({ message: "Logged out" })
+  },
+  getCurrentUser: async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const user = await authService.getCurrentUser(req.userId!)
+      return res.status(200).json({ user })
+    } catch (err) {
+      next(err)
+    }
   },
 }

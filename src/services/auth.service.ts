@@ -15,10 +15,11 @@ function requireEnv(name: string): string {
   return value
 }
 
-function generateToken(user: {user_id: number; role: string}): string {
+function generateToken(user: { user_id: number | string; role: string }): string {
   return jwt.sign(
-    { sub: String(user.user_id),
-      role: user.role
+    {
+      sub: String(user.user_id),
+      role: user.role,
     },
     requireEnv("JWT_SECRET"),
     { expiresIn: "24h" },
