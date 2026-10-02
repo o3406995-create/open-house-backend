@@ -23,10 +23,12 @@ export const authController = {
         })
       }
 
-      const { token, user } = await authService.register(parsed.data)
+      const { token, user } = await authService.register(parsed.data, {
+        ip_address: req.ip,
+        user_agent: req.headers["user-agent"],
+      })
 
       res.cookie("token", token, COOKIE_OPTIONS)
-
       return res.status(201).json({ user })
     } catch (err) {
       next(err)
@@ -44,7 +46,11 @@ export const authController = {
                 
             })
         }
-        const { token, user } = await authService.login(parsed.data)
+
+        const { token, user } = await authService.login(parsed.data, {
+          ip_address: req.ip,
+          user_agent: req.headers["user-agent"],
+        })
 
         res.cookie("token", token, COOKIE_OPTIONS)
 
@@ -54,6 +60,16 @@ export const authController = {
     }
 
   },
+
+    getCurrentUser: async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const user = await authService.getCurrentUser(req.userId!)
+      return res.status(200).json({ user })
+    } catch (err) {
+      next(err)
+    }
+  },
+
   logout: (_req: Request, res: Response) => {
     res.clearCookie("token", {
       httpOnly: true,
