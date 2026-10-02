@@ -6,6 +6,7 @@ import swaggerSpec from "./lib/swagger.js"
 import authRoutes from "./routes/auth.routes.js"
 import { errorHandler } from "./middleware/errorHandler.js"
 import cookieParser from "cookie-parser"
+import usersRoutes from "./routes/users.routes.js"
 
 const app = express()
 const PORT = 3000
@@ -29,6 +30,8 @@ app.get("/", (req, res) => {
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 app.use("/api/auth", authRoutes)
+
+app.use("/api/users", usersRoutes)
 
 app.use(errorHandler)
 
