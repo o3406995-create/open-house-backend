@@ -218,6 +218,8 @@ model ActivityLog {
   log_id     Int       @id @default(autoincrement())
   user_id    Int?
   action     LogAction
+  success    Boolean
+  message    String?
   ip_address String?
   user_agent String?
   created_at DateTime  @default(now())
