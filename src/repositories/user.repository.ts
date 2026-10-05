@@ -19,7 +19,4 @@ export const userRepository = {
       },
     })
   },
-  findById: (user_id: number) => {
-    return prisma.user.findUnique({ where: { user_id } })
-  },
 }
