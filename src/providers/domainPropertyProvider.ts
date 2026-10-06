@@ -1,10 +1,7 @@
-import type {
-  PropertyDataProvider,
-  PropertySearchCriteria,
-  PropertyDTO,
-} from "./PropertyDataProvider.js"
-import { mapSearchResultToDTO, mapDetailToDTO } from "./mappers/domainMapper.js"
-import { AppError } from "../../lib/AppError.js"
+import type { PropertyDataProvider } from "./propertyDataProvider.js"
+import type { PropertyDTO, PropertySearchCriteria } from "../types/property.js"
+import { mapSearchResultToDTO, mapDetailToDTO } from "../mappers/domainPropertyMapper.js"
+import { AppError } from "../lib/AppError.js"
 
 function requireEnv(name: string): string {
   const value = process.env[name]

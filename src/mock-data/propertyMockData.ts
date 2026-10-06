@@ -1,4 +1,4 @@
-import type { PropertyDTO } from "../PropertyDataProvider.js"
+import type { PropertyDTO } from "../types/property.js"
 
 // Hardcoded sample properties for local development and testing.
 // Shapes are identical to what DomainPropertyProvider produces.

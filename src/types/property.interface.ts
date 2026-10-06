@@ -39,8 +39,3 @@ export interface PropertyDTO {
   listingUrl: string | null
   openHouses: OpenHouseDTO[]
 }
-
-export interface PropertyDataProvider {
-  search(criteria: PropertySearchCriteria): Promise<PropertyDTO[]>
-  getById(externalId: string): Promise<PropertyDTO | null>
-}
