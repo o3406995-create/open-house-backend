@@ -1,4 +1,4 @@
-import type { PropertyDTO, OpenHouseDTO } from "../PropertyDataProvider.js"
+import type { PropertyDTO, OpenHouseDTO } from "../types/property.js"
 
 // Shape of a single item returned by Domain's "search" endpoint (only fields we use)
 interface DomainSearchListing {

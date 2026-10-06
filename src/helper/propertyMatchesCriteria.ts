@@ -1,11 +1,9 @@
-import type {
-  PropertyDataProvider,
-  PropertySearchCriteria,
-  PropertyDTO,
-} from "./PropertyDataProvider.js"
-import { mockProperties } from "./mock-data/properties.js"
+import type { PropertyDTO, PropertySearchCriteria } from "../types/property.js"
 
-function matchesCriteria(property: PropertyDTO, criteria: PropertySearchCriteria): boolean {
+export function propertyMatchesCriteria(
+  property: PropertyDTO,
+  criteria: PropertySearchCriteria,
+): boolean {
   if (criteria.minBedrooms !== undefined && property.bedrooms < criteria.minBedrooms) {
     return false
   }
@@ -40,15 +38,4 @@ function matchesCriteria(property: PropertyDTO, criteria: PropertySearchCriteria
   }
 
   return true
-}
-
-export const mockPropertyProvider: PropertyDataProvider = {
-  search: async (criteria: PropertySearchCriteria): Promise<PropertyDTO[]> => {
-    return mockProperties.filter((property) => matchesCriteria(property, criteria))
-  },
-
-  getById: async (externalId: string): Promise<PropertyDTO | null> => {
-    const property = mockProperties.find((p) => p.externalId === externalId)
-    return property ?? null
-  },
 }
