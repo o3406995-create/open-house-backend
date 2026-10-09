@@ -6,6 +6,138 @@ info:
 servers:
   - url: http://localhost:3000
     description: Local development server
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+      description: >
+        JWT stored in an HttpOnly cookie named "token", set automatically by
+        /api/auth/login or /api/auth/register. Browser clients send this
+        cookie automatically on subsequent requests; it cannot be entered
+        manually in this Swagger UI since it is HttpOnly.
+
+  schemas:
+    User:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Test User
+        email:
+          type: string
+          format: email
+          example: test@example.com
+        phone:
+          type: string
+          nullable: true
+          example: null
+        role:
+          type: string
+          enum: [USER, AGENT, ADMIN]
+          example: USER
+        status:
+          type: string
+          example: ACTIVE
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Validation failed
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            email: ["Invalid email address"]
+
+    OpenHouse:
+      type: object
+      properties:
+        externalId:
+          type: string
+          example: mock-1-0
+        startDatetime:
+          type: string
+          format: date-time
+        endDatetime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [SCHEDULED, CANCELLED, COMPLETED]
+
+    Property:
+      type: object
+      properties:
+        externalId:
+          type: string
+          example: mock-1
+        source:
+          type: string
+          example: mock
+        address:
+          type: string
+          example: 12 Example Street, Brisbane
+        suburb:
+          type: string
+          example: Brisbane
+        state:
+          type: string
+          example: QLD
+        postcode:
+          type: string
+          example: "4000"
+        price:
+          type: number
+          nullable: true
+          example: 650000
+        displayPrice:
+          type: string
+          example: "$650,000"
+        bedrooms:
+          type: integer
+          example: 3
+        bathrooms:
+          type: integer
+          example: 2
+        propertyType:
+          type: string
+          example: House
+        latitude:
+          type: number
+          nullable: true
+          example: -27.4698
+        longitude:
+          type: number
+          nullable: true
+          example: 153.0251
+        description:
+          type: string
+          nullable: true
+        listingUrl:
+          type: string
+          nullable: true
+        openHouses:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpenHouse"
+
 paths:
   /api/auth/register:
     post:
@@ -37,9 +169,199 @@ paths:
                   minLength: 8
                   example: password123
       responses:
-        '201':
-          description: User created successfully
-        '400':
+        "201":
+          description: User created successfully. The JWT is also set in an HttpOnly cookie named "token".
+          headers:
+            Set-Cookie:
+              description: HttpOnly cookie named "token" containing the JWT
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+        "400":
           description: Validation failed
-        '409':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "409":
           description: Email is already registered
+
+  /api/auth/login:
+    post:
+      summary: Authenticate a USER, AGENT, or ADMIN account
+      description: Verifies credentials and rejects disabled accounts. On success the JWT is set in an HttpOnly cookie named "token" and the authenticated user is returned in the response body.
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: test@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+      responses:
+        "200":
+          description: Login successful. The token is set in an HttpOnly cookie (Set-Cookie header).
+          headers:
+            Set-Cookie:
+              description: HttpOnly cookie named "token" containing the JWT
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Invalid email or password
+        "403":
+          description: Account is disabled
+
+  /api/auth/logout:
+    post:
+      summary: Log out the current user
+      description: Clears the HttpOnly "token" cookie. Safe to call even when not logged in.
+      tags:
+        - Auth
+      responses:
+        "200":
+          description: Logged out. The token cookie is cleared via the Set-Cookie header.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged out
+
+  /api/users/me:
+    get:
+      summary: Get the currently authenticated user
+      description: Returns the current user based on the JWT stored in the HttpOnly "token" cookie.
+      tags:
+        - Users
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Current user returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated or session expired
+        "404":
+          description: User not found
+
+  /api/properties/search:
+    post:
+      summary: Search properties
+      description: Uses mock listings unless PROPERTY_DATA_SOURCE is set to domain.
+      tags:
+        - Properties
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - latitude
+                - longitude
+                - radiusMeters
+              properties:
+                latitude:
+                  type: number
+                  example: -27.4698
+                longitude:
+                  type: number
+                  example: 153.0251
+                radiusMeters:
+                  type: number
+                  example: 5000
+                minBedrooms:
+                  type: integer
+                  example: 2
+                maxBedrooms:
+                  type: integer
+                minBathrooms:
+                  type: integer
+                maxBathrooms:
+                  type: integer
+                minPrice:
+                  type: number
+                maxPrice:
+                  type: number
+                  example: 800000
+                propertyType:
+                  type: string
+                  example: House
+                auctionOnly:
+                  type: boolean
+      responses:
+        "200":
+          description: Matching properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Property"
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /api/properties/{externalId}:
+    get:
+      summary: Get one property by external id
+      tags:
+        - Properties
+      parameters:
+        - in: path
+          name: externalId
+          required: true
+          schema:
+            type: string
+          example: mock-1
+      responses:
+        "200":
+          description: Property found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+        "404":
+          description: Property not found
