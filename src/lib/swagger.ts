@@ -14,6 +14,16 @@ const swaggerSpec = swaggerJSDoc({
         description: "Local development server",
       },
     ],
+    components: {
+      securitySchemes: {
+        cookieAuth: {
+          type: "apiKey",
+          in: "cookie",
+          name: "token",
+          description: "JWT stored in an HttpOnly cookie named 'token', set by /api/auth/login or /api/auth/register.",
+        },
+      },
+    },
   },
   apis: ["src/routes/*.routes.ts"],
 })
