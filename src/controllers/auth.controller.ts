@@ -2,12 +2,16 @@ import type { Request, Response, NextFunction } from "express"
 import { registerSchema, loginSchema } from "../validators/auth.validator.js"
 import { authService } from "../services/auth.service.js"
 import type { AuthenticatedRequest } from "../middleware/auth.middleware.js"
+import {
+  AUTH_COOKIE_MAX_AGE_MS,
+  AUTH_COOKIE_NAME,
+} from "../constants/auth.js"
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
-  maxAge: 24 * 60 * 60 * 1000,
+  maxAge: AUTH_COOKIE_MAX_AGE_MS,
   path: "/",
 }
 
@@ -28,7 +32,7 @@ export const authController = {
         user_agent: req.headers["user-agent"],
       })
 
-      res.cookie("token", token, COOKIE_OPTIONS)
+      res.cookie(AUTH_COOKIE_NAME, token, COOKIE_OPTIONS)
       return res.status(201).json({ user })
     } catch (err) {
       next(err)
@@ -52,7 +56,7 @@ export const authController = {
           user_agent: req.headers["user-agent"],
         })
 
-        res.cookie("token", token, COOKIE_OPTIONS)
+        res.cookie(AUTH_COOKIE_NAME, token, COOKIE_OPTIONS)
 
         return res.status(200).json({ user })
     } catch (err) {
@@ -62,7 +66,7 @@ export const authController = {
   },
 
   logout: (_req: Request, res: Response) => {
-    res.clearCookie("token", {
+    res.clearCookie(AUTH_COOKIE_NAME, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

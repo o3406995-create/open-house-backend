@@ -4,8 +4,7 @@ import { userRepository } from "../repositories/user.repository.js"
 import { activityLogRepository } from "../repositories/activityLog.repository.js"
 import { AppError } from "../lib/AppError.js"
 import type { RegisterInput, LoginInput } from "../validators/auth.validator.js"
-
-const SALT_ROUNDS = 10
+import { BCRYPT_SALT_ROUNDS, JWT_TTL_SECONDS } from "../constants/auth.js"
 
 function requireEnv(name: string): string {
   const value = process.env[name]
@@ -22,7 +21,7 @@ function generateToken(user: { user_id: number | string; role: string }): string
       role: user.role,
     },
     requireEnv("JWT_SECRET"),
-    { expiresIn: "24h" },
+    { expiresIn: JWT_TTL_SECONDS },
   )
 }
 
@@ -61,7 +60,7 @@ export const authService = {
       throw new AppError("Email is already registered.", 409)
     }
 
-    const password_hash = await bcrypt.hash(input.password, SALT_ROUNDS)
+    const password_hash = await bcrypt.hash(input.password, BCRYPT_SALT_ROUNDS)
 
     const user = await userRepository.create({
       name: input.name,

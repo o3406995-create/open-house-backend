@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express"
 import jwt from "jsonwebtoken"
 import { AppError } from "../lib/AppError.js"
+import { AUTH_COOKIE_NAME } from "../constants/auth.js"
 
 function requireEnv(name: string): string {
   const value = process.env[name]
@@ -25,7 +26,7 @@ export function requireAuth(
   _res: Response,
   next: NextFunction,
 ) {
-  const token = req.cookies?.token
+  const token = req.cookies?.[AUTH_COOKIE_NAME]
 
   if (!token) {
     return next(new AppError("Not authenticated.", 401))

@@ -2,6 +2,10 @@ import type { PropertyDataProvider } from "./propertyDataProvider.js"
 import type { PropertyDTO, PropertySearchCriteria } from "../types/property.js"
 import { mapSearchResultToDTO, mapDetailToDTO } from "../mappers/domainPropertyMapper.js"
 import { AppError } from "../lib/AppError.js"
+import {
+  DEFAULT_DOMAIN_API_BASE_URL,
+  DEFAULT_DOMAIN_AUTH_URL,
+} from "../constants/domainApi.js"
 
 function requireEnv(name: string): string {
   const value = process.env[name]
@@ -11,8 +15,8 @@ function requireEnv(name: string): string {
   return value
 }
 
-const AUTH_URL = "https://auth.domain.com.au/v1/connect/token"
-const API_BASE_URL = "https://api.domain.com.au/v1"
+const AUTH_URL = process.env.DOMAIN_AUTH_URL || DEFAULT_DOMAIN_AUTH_URL
+const API_BASE_URL = process.env.DOMAIN_API_BASE_URL || DEFAULT_DOMAIN_API_BASE_URL
 
 let cachedToken: { value: string; expiresAt: number } | null = null
 
