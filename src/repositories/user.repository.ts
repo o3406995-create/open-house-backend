@@ -9,13 +9,18 @@ export const userRepository = {
     return prisma.user.findUnique({ where: { user_id } })
   },
 
-  create: (data: { name: string; email: string; password_hash: string }) => {
+  create: (data: {
+    name: string
+    email: string
+    password_hash: string
+    role?: "USER" | "AGENT" | "ADMIN"
+  }) => {
     return prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         password_hash: data.password_hash,
-        role: "USER",
+        role: data.role ?? "USER",
       },
     })
   },
