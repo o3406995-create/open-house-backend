@@ -1,5 +1,6 @@
 import { Router } from "express"
 import { propertyController } from "../controllers/property.controller.js"
+import { requireAuth } from "../middleware/auth.middleware.js"
 
 const router = Router()
 
@@ -8,9 +9,11 @@ const router = Router()
  * /api/properties/search:
  *   post:
  *     summary: Search properties
- *     description: Uses mock listings unless PROPERTY_DATA_SOURCE is set to domain.
+ *     description: Uses mock listings unless PROPERTY_DATA_SOURCE is set to domain. Requires authentication.
  *     tags:
  *       - Properties
+ *     security:
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -45,16 +48,21 @@ const router = Router()
  *         description: Matching properties
  *       400:
  *         description: Validation failed
+ *       401:
+ *         description: Not authenticated
  */
-router.post("/search", propertyController.search)
+router.post("/search", requireAuth, propertyController.search)
 
 /**
  * @swagger
  * /api/properties/{externalId}:
  *   get:
  *     summary: Get one property by external id
+ *     description: Requires authentication.
  *     tags:
  *       - Properties
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: externalId
@@ -65,9 +73,11 @@ router.post("/search", propertyController.search)
  *     responses:
  *       200:
  *         description: Property found
+ *       401:
+ *         description: Not authenticated
  *       404:
  *         description: Property not found
  */
-router.get("/:externalId", propertyController.getById)
+router.get("/:externalId", requireAuth, propertyController.getById)
 
 export default router
