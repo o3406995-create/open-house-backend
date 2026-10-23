@@ -58,6 +58,7 @@ model User {
   status        String   @default("ACTIVE")
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
+  deleted_at    DateTime?
 
   agentProfile    AgentProfile?
   savedProperties SavedProperty[]
