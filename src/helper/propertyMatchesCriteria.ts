@@ -1,9 +1,22 @@
 import type { PropertyDTO, PropertySearchCriteria } from "../types/property.js"
+import { distanceInMeters } from "./distance.js"
 
 export function propertyMatchesCriteria(
   property: PropertyDTO,
   criteria: PropertySearchCriteria,
 ): boolean {
+  if (property.latitude !== null && property.longitude !== null) {
+    const distance = distanceInMeters(
+      criteria.latitude,
+      criteria.longitude,
+      property.latitude,
+      property.longitude,
+    )
+    if (distance > criteria.radiusMeters) {
+      return false
+    }
+  }
+
   if (criteria.minBedrooms !== undefined && property.bedrooms < criteria.minBedrooms) {
     return false
   }
