@@ -99,7 +99,7 @@ export const authService = {
 
     // Deleted accounts get the same generic failure as bad credentials,
     // so the response never reveals that the account was deleted.
-    if (user.deleted_at) {
+    if (user.is_deleted) {
       await logActivity("LOGIN", false, "Login attempt on deleted account", meta, user.user_id)
       throw new AppError(AUTH_ERROR_INVALID_CREDENTIALS, 401)
     }

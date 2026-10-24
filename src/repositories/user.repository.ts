@@ -8,6 +8,10 @@ export interface ListUsersParams {
   pageSize: number
 }
 
+// Single source of truth for "not deleted". Every business query on User
+// must spread this, so deleted accounts can never leak into results.
+const NOT_DELETED = { is_deleted: false } as const
+
 // Explicit select so password_hash can never leak through list results
 const PUBLIC_USER_SELECT = {
   user_id: true,
@@ -21,20 +25,20 @@ const PUBLIC_USER_SELECT = {
 } as const
 
 export const userRepository = {
-  // Includes soft-deleted accounts on purpose: a deleted account still owns its email,
+  // Includes deleted accounts on purpose: a deleted account still owns its email,
   // so registration returns 409 and login can recognise it.
   findByEmail: (email: string) => {
     return prisma.user.findUnique({ where: { email } })
   },
 
-  // Raw lookup, includes soft-deleted accounts (callers decide how to treat them).
+  // Raw lookup, includes deleted accounts (callers decide how to treat them).
   findById: (user_id: number) => {
     return prisma.user.findUnique({ where: { user_id } })
   },
 
-  // Excludes soft-deleted accounts. Used by auth checks.
+  // Excludes deleted accounts. Used by auth checks.
   findActiveById: (user_id: number) => {
-    return prisma.user.findFirst({ where: { user_id, deleted_at: null } })
+    return prisma.user.findFirst({ where: { user_id, ...NOT_DELETED } })
   },
 
   create: (data: {
@@ -53,10 +57,10 @@ export const userRepository = {
     })
   },
 
-  // Never returns ADMIN accounts or soft-deleted accounts.
+  // Never returns ADMIN accounts or deleted accounts.
   getAllUsers: async ({ role, page, pageSize }: ListUsersParams) => {
     const where = {
-      deleted_at: null,
+      ...NOT_DELETED,
       role: role ?? { not: "ADMIN" as const },
     }
 
@@ -74,13 +78,14 @@ export const userRepository = {
     return { users, total }
   },
 
-  // The WHERE clause itself refuses ADMIN and already-deleted rows,
-  // so these guarantees hold even if a caller forgets to check.
-  // Returns true if a row was deleted.
+  // Check-and-update in ONE atomic statement: the WHERE only matches a row that is
+  // not deleted and not ADMIN. Two concurrent deletes cannot both succeed.
+  // is_deleted and deleted_at are always written together, here and nowhere else.
+  // Returns true if a row was deleted, false if nothing matched.
   softDelete: async (user_id: number): Promise<boolean> => {
     const { count } = await prisma.user.updateMany({
-      where: { user_id, deleted_at: null, role: { not: "ADMIN" } },
-      data: { deleted_at: new Date() },
+      where: { user_id, ...NOT_DELETED, role: { not: "ADMIN" } },
+      data: { is_deleted: true, deleted_at: new Date() },
     })
     return count > 0
   },

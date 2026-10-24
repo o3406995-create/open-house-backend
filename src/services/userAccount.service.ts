@@ -31,12 +31,16 @@ export const userAccountService = {
     return { users, total, page, pageSize }
   },
 
-  // Shared guard: #68/#71 (update) should call this too, so ADMIN accounts
+  // Shared guard: update APIs (#68/#71) should call this too, so ADMIN accounts
   // are protected from modification as well as deletion.
   getManageableUser: async (userId: number) => {
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new AppError(USER_ERROR_NOT_FOUND, 404)
+    }
+
     const target = await userRepository.findById(userId)
 
-    if (!target || target.deleted_at) {
+    if (!target || target.is_deleted) {
       throw new AppError(USER_ERROR_NOT_FOUND, 404)
     }
     if (target.role === "ADMIN") {
@@ -48,11 +52,13 @@ export const userAccountService = {
 
   // Who may call this (ADMIN only) is enforced by requireAdmin on the route in #69/#72.
   deleteUser: async (userId: number) => {
+    // is_deleted = true  -> 404 "not found or already deleted"
+    // is_deleted = false -> continue
     await userAccountService.getManageableUser(userId)
 
     const deleted = await userRepository.softDelete(userId)
     if (!deleted) {
-      // Lost a race with a concurrent delete
+      // Another request deleted it between the check and the update
       throw new AppError(USER_ERROR_NOT_FOUND, 404)
     }
   },
