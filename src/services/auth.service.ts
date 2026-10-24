@@ -4,7 +4,11 @@ import { userRepository } from "../repositories/user.repository.js"
 import { activityLogRepository } from "../repositories/activityLog.repository.js"
 import { AppError } from "../lib/AppError.js"
 import type { RegisterInput, LoginInput } from "../validators/auth.validator.js"
-import { BCRYPT_SALT_ROUNDS, JWT_TTL_SECONDS } from "../constants/auth.js"
+import {
+  BCRYPT_SALT_ROUNDS,
+  JWT_TTL_SECONDS,
+  AUTH_ERROR_INVALID_CREDENTIALS,
+} from "../constants/auth.js"
 
 function requireEnv(name: string): string {
   const value = process.env[name]
@@ -23,6 +27,11 @@ function generateToken(user: { user_id: number | string; role: string }): string
     requireEnv("JWT_SECRET"),
     { expiresIn: JWT_TTL_SECONDS },
   )
+}
+
+interface RequestMeta {
+  ip_address?: string | undefined
+  user_agent?: string | undefined
 }
 
 async function logActivity(
@@ -46,13 +55,10 @@ async function logActivity(
   }
 }
 
-interface RequestMeta {
-  ip_address?: string | undefined
-  user_agent?: string | undefined
-}
-
 export const authService = {
   register: async (input: RegisterInput, meta: RequestMeta) => {
+    // findByEmail includes soft-deleted accounts, so a deleted account's email
+    // cannot be re-registered (409).
     const existingUser = await userRepository.findByEmail(input.email)
 
     if (existingUser) {
@@ -80,24 +86,31 @@ export const authService = {
     const user = await userRepository.findByEmail(input.email)
 
     if (!user) {
-        await logActivity("LOGIN", false, `Login attempt with unregistered email: ${input.email}`, meta)
-        throw new AppError("Invalid email or password.", 401)
+      await logActivity("LOGIN", false, `Login attempt with unregistered email: ${input.email}`, meta)
+      throw new AppError(AUTH_ERROR_INVALID_CREDENTIALS, 401)
     }
 
     const isPasswordValid = await bcrypt.compare(input.password, user.password_hash)
 
     if (!isPasswordValid) {
-        await logActivity("LOGIN", false, "Incorrect password", meta, user.user_id)
-        throw new AppError("Invalid email or password.", 401)
+      await logActivity("LOGIN", false, "Incorrect password", meta, user.user_id)
+      throw new AppError(AUTH_ERROR_INVALID_CREDENTIALS, 401)
+    }
+
+    // Deleted accounts get the same generic failure as bad credentials,
+    // so the response never reveals that the account was deleted.
+    if (user.is_deleted) {
+      await logActivity("LOGIN", false, "Login attempt on deleted account", meta, user.user_id)
+      throw new AppError(AUTH_ERROR_INVALID_CREDENTIALS, 401)
     }
 
     if (user.status !== "ACTIVE") {
-        await logActivity("LOGIN", false, "Account is disabled", meta, user.user_id)
-        throw new AppError("This account has been disabled.", 403)
+      await logActivity("LOGIN", false, "Account is disabled", meta, user.user_id)
+      throw new AppError("This account has been disabled.", 403)
     }
 
     const token = generateToken(user)
-    
+
     await logActivity("LOGIN", true, "User logged in successfully", meta, user.user_id)
 
     const { password_hash: _omit, ...safeUser } = user
@@ -105,14 +118,14 @@ export const authService = {
     return { token, user: safeUser }
   },
 
-    getCurrentUser: async (userId: string) => {
-      const user = await userRepository.findById(Number(userId))
+  getCurrentUser: async (userId: string) => {
+    const user = await userRepository.findActiveById(Number(userId))
 
-      if (!user) {
-        throw new AppError("User not found.", 404)
-      }
+    if (!user) {
+      throw new AppError("User not found.", 404)
+    }
 
-      const { password_hash: _omit, ...safeUser } = user
-      return safeUser
+    const { password_hash: _omit, ...safeUser } = user
+    return safeUser
   },
 }
