@@ -1,4 +1,9 @@
 import { z } from "zod"
+import {
+  PROPERTY_ID_MAX_LENGTH,
+  PROPERTY_ID_PATTERN,
+  PROPERTY_ERROR_INVALID_ID,
+} from "../constants/property.js"
 
 export const propertySearchSchema = z.object({
   latitude: z.number(),
@@ -16,4 +21,13 @@ export const propertySearchSchema = z.object({
   auctionOnly: z.boolean().optional(),
 })
 
+export const propertyIdParamSchema = z.object({
+  externalId: z
+    .string()
+    .min(1, PROPERTY_ERROR_INVALID_ID)
+    .max(PROPERTY_ID_MAX_LENGTH, PROPERTY_ERROR_INVALID_ID)
+    .regex(PROPERTY_ID_PATTERN, PROPERTY_ERROR_INVALID_ID),
+})
+
 export type PropertySearchInput = z.infer<typeof propertySearchSchema>
+export type PropertyIdParam = z.infer<typeof propertyIdParamSchema>
