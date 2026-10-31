@@ -14,6 +14,8 @@ export interface PropertySearchCriteria {
   auctionOnly?: boolean
 }
 
+export type PropertySource = "domain" | "mock"
+
 export interface OpenHouseDTO {
   externalId: string
   startDatetime: Date
@@ -30,9 +32,10 @@ export interface AgentDTO {
   photoUrl: string | null
 }
 
-export interface PropertyDTO {
+// Returned by search: only what a list or map marker needs.
+export interface PropertySummaryDTO {
   externalId: string
-  source: string
+  source: PropertySource
   address: string
   suburb: string
   state: string
@@ -42,13 +45,18 @@ export interface PropertyDTO {
   bedrooms: number
   bathrooms: number
   carSpaces: number | null
-  landSizeSqm: number | null
   propertyType: string
   latitude: number | null
   longitude: number | null
+  thumbnailUrl: string | null
+  openHouses: OpenHouseDTO[]
+}
+
+// Returned by the details endpoint: the summary plus everything the details page shows.
+export interface PropertyDetailDTO extends PropertySummaryDTO {
+  landSizeSqm: number | null
   description: string | null
   listingUrl: string | null
   images: string[]
   agent: AgentDTO | null
-  openHouses: OpenHouseDTO[]
 }
