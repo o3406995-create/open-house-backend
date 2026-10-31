@@ -142,6 +142,7 @@ paths:
   /api/auth/register:
     post:
       summary: Register a new USER account
+      security: []
       description: Public registration always assigns the USER role. AGENT accounts cannot be created through this endpoint.
       tags:
         - Auth
@@ -190,12 +191,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/ValidationError"
         "409":
-          description: Email is already registered
+          description: Email is already registered (including emails of deleted accounts)
 
   /api/auth/login:
     post:
       summary: Authenticate a USER, AGENT, or ADMIN account
-      description: Verifies credentials and rejects disabled accounts. On success the JWT is set in an HttpOnly cookie named "token" and the authenticated user is returned in the response body.
+      security: []
+      description: Verifies credentials and rejects disabled accounts. Deleted accounts receive the same generic 401 as wrong credentials. On success the JWT is set in an HttpOnly cookie named "token" and the authenticated user is returned in the response body.
       tags:
         - Auth
       requestBody:
@@ -245,6 +247,7 @@ paths:
   /api/auth/logout:
     post:
       summary: Log out the current user
+      security: []
       description: Clears the HttpOnly "token" cookie. Safe to call even when not logged in.
       tags:
         - Auth
@@ -263,7 +266,7 @@ paths:
   /api/users/me:
     get:
       summary: Get the currently authenticated user
-      description: Returns the current user based on the JWT stored in the HttpOnly "token" cookie.
+      description: Returns the current user based on the JWT stored in the HttpOnly "token" cookie. Sessions of deleted accounts are rejected with 401.
       tags:
         - Users
       security:
@@ -279,16 +282,22 @@ paths:
                   user:
                     $ref: "#/components/schemas/User"
         "401":
-          description: Not authenticated or session expired
+          description: Not authenticated, session expired, or account deleted
         "404":
           description: User not found
 
   /api/properties/search:
     post:
       summary: Search properties
-      description: Uses mock listings unless PROPERTY_DATA_SOURCE is set to domain.
+      description: >
+        Uses mock listings unless PROPERTY_DATA_SOURCE is set to domain.
+        Requires authentication. Each minimum value must not be greater than
+        its maximum, and startDate must not be after endDate; otherwise the
+        request fails validation with 400.
       tags:
         - Properties
+      security:
+        - cookieAuth: []
       requestBody:
         required: true
         content:
@@ -302,26 +311,45 @@ paths:
               properties:
                 latitude:
                   type: number
+                  minimum: -90
+                  maximum: 90
                   example: -27.4698
                 longitude:
                   type: number
+                  minimum: -180
+                  maximum: 180
                   example: 153.0251
                 radiusMeters:
                   type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  maximum: 50000
                   example: 5000
+                startDate:
+                  type: string
+                  format: date-time
+                endDate:
+                  type: string
+                  format: date-time
                 minBedrooms:
                   type: integer
+                  minimum: 0
                   example: 2
                 maxBedrooms:
                   type: integer
+                  minimum: 0
                 minBathrooms:
                   type: integer
+                  minimum: 0
                 maxBathrooms:
                   type: integer
+                  minimum: 0
                 minPrice:
                   type: number
+                  minimum: 0
                 maxPrice:
                   type: number
+                  minimum: 0
                   example: 800000
                 propertyType:
                   type: string
@@ -334,27 +362,37 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Property"
+                type: object
+                properties:
+                  properties:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Property"
         "400":
           description: Validation failed
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Not authenticated
 
   /api/properties/{externalId}:
     get:
       summary: Get one property by external id
+      description: Requires authentication. Returns the property with all of its open houses and the external listing URL.
       tags:
         - Properties
+      security:
+        - cookieAuth: []
       parameters:
         - in: path
           name: externalId
           required: true
           schema:
             type: string
+            maxLength: 64
+            pattern: "^[A-Za-z0-9_-]+$"
           example: mock-1
       responses:
         "200":
@@ -362,6 +400,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Property"
+                type: object
+                properties:
+                  property:
+                    $ref: "#/components/schemas/Property"
+        "400":
+          description: Invalid property id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Not authenticated
         "404":
           description: Property not found

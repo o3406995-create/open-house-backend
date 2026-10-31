@@ -45,7 +45,7 @@ const router = Router()
  *                 example: House
  *     responses:
  *       200:
- *         description: Matching properties
+ *         description: Matching properties, returned as { properties }
  *       400:
  *         description: Validation failed
  *       401:
@@ -58,7 +58,7 @@ router.post("/search", requireAuth, propertyController.search)
  * /api/properties/{externalId}:
  *   get:
  *     summary: Get one property by external id
- *     description: Requires authentication.
+ *     description: Requires authentication. Returns the property with all of its open houses and the external listing URL.
  *     tags:
  *       - Properties
  *     security:
@@ -69,10 +69,14 @@ router.post("/search", requireAuth, propertyController.search)
  *         required: true
  *         schema:
  *           type: string
+ *           maxLength: 64
+ *           pattern: '^[A-Za-z0-9_-]+$'
  *         example: mock-1
  *     responses:
  *       200:
- *         description: Property found
+ *         description: Property found, returned as { property }
+ *       400:
+ *         description: Invalid property id
  *       401:
  *         description: Not authenticated
  *       404:
