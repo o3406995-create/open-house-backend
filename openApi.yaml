@@ -82,15 +82,37 @@ components:
           type: string
           enum: [SCHEDULED, CANCELLED, COMPLETED]
 
-    Property:
+    Agent:
       type: object
+      nullable: true
+      properties:
+        name:
+          type: string
+          example: Sarah Mitchell
+        agencyName:
+          type: string
+          nullable: true
+          example: Harbour Realty
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+
+    PropertySummary:
+      type: object
+      description: Returned by search. Contains only what a list or map marker needs.
       properties:
         externalId:
           type: string
           example: mock-1
         source:
           type: string
-          example: mock
+          enum: [domain, mock]
         address:
           type: string
           example: 12 Example Street, Brisbane
@@ -116,6 +138,10 @@ components:
         bathrooms:
           type: integer
           example: 2
+        carSpaces:
+          type: integer
+          nullable: true
+          example: 2
         propertyType:
           type: string
           example: House
@@ -127,16 +153,37 @@ components:
           type: number
           nullable: true
           example: 153.0251
-        description:
-          type: string
-          nullable: true
-        listingUrl:
+        thumbnailUrl:
           type: string
           nullable: true
         openHouses:
           type: array
           items:
             $ref: "#/components/schemas/OpenHouse"
+
+    PropertyDetail:
+      description: Returned by the details endpoint. The summary plus full details.
+      allOf:
+        - $ref: "#/components/schemas/PropertySummary"
+        - type: object
+          properties:
+            landSizeSqm:
+              type: number
+              nullable: true
+              example: 603
+            description:
+              type: string
+              nullable: true
+            listingUrl:
+              type: string
+              nullable: true
+              description: External listing link. Only https URLs are returned.
+            images:
+              type: array
+              items:
+                type: string
+            agent:
+              $ref: "#/components/schemas/Agent"
 
 paths:
   /api/auth/register:
@@ -291,9 +338,10 @@ paths:
       summary: Search properties
       description: >
         Uses mock listings unless PROPERTY_DATA_SOURCE is set to domain.
-        Requires authentication. Each minimum value must not be greater than
-        its maximum, and startDate must not be after endDate; otherwise the
-        request fails validation with 400.
+        Requires authentication. Returns summaries only; use the details
+        endpoint for images, agent and description. Each minimum value must
+        not be greater than its maximum, and startDate must not be after
+        endDate; otherwise the request fails validation with 400.
       tags:
         - Properties
       security:
@@ -367,7 +415,7 @@ paths:
                   properties:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Property"
+                      $ref: "#/components/schemas/PropertySummary"
         "400":
           description: Validation failed
           content:
@@ -380,7 +428,7 @@ paths:
   /api/properties/{externalId}:
     get:
       summary: Get one property by external id
-      description: Requires authentication. Returns the property with all of its open houses and the external listing URL.
+      description: Requires authentication. Returns the full property details including all images, the listing agent, all of its open houses and the external listing URL.
       tags:
         - Properties
       security:
@@ -403,7 +451,7 @@ paths:
                 type: object
                 properties:
                   property:
-                    $ref: "#/components/schemas/Property"
+                    $ref: "#/components/schemas/PropertyDetail"
         "400":
           description: Invalid property id
           content:
