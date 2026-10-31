@@ -1,8 +1,8 @@
-import type { PropertyDTO, PropertySearchCriteria } from "../types/property.js"
+import type { PropertyDetailDTO, PropertySearchCriteria } from "../types/property.js"
 import { distanceInMeters } from "./distance.js"
 
 export function propertyMatchesCriteria(
-  property: PropertyDTO,
+  property: PropertyDetailDTO,
   criteria: PropertySearchCriteria,
 ): boolean {
   if (property.latitude !== null && property.longitude !== null) {

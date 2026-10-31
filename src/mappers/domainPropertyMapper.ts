@@ -1,9 +1,21 @@
-import type { PropertyDTO, OpenHouseDTO, AgentDTO } from "../types/property.js"
-import { DOMAIN_MEDIA_CATEGORY_IMAGE } from "../constants/property.js"
+import type {
+  AgentDTO,
+  OpenHouseDTO,
+  PropertyDetailDTO,
+  PropertySummaryDTO,
+} from "../types/property.js"
+import {
+  SOURCE_DOMAIN,
+  DOMAIN_LISTING_BASE_URL,
+  DOMAIN_MEDIA_CATEGORY_IMAGE,
+  PRICE_WITHHELD_LABEL,
+  UNKNOWN_PROPERTY_TYPE,
+} from "../constants/domain.js"
+import { toSafeUrl } from "../helper/safeUrl.js"
 
-// NOTE: the media / advertiser / carspaces / land-size fields below are mapped
-// defensively (missing => null / []). Verify the exact field names against a real
-// Domain response once "Agents & Listings" access is approved.
+// NOTE: media / advertiser / carspaces / land-size field names below are unverified
+// (Domain access pending). Check them against a real response once approved.
+// Everything is mapped defensively: missing data becomes null / [].
 
 interface DomainMediaItem {
   category?: string
@@ -19,6 +31,11 @@ interface DomainAdvertiser {
   }>
 }
 
+interface DomainInspectionTime {
+  openingTime: string
+  closingTime: string
+}
+
 // Shape of a single item returned by Domain's "search" endpoint (only fields we use)
 interface DomainSearchListing {
   listing: {
@@ -32,7 +49,6 @@ interface DomainSearchListing {
       bathrooms: number
       bedrooms: number
       carspaces?: number
-      landArea?: number
       suburb: string
       state: string
       postcode: string
@@ -40,16 +56,10 @@ interface DomainSearchListing {
       latitude?: number
       longitude?: number
     }
-    summaryDescription?: string
     media?: DomainMediaItem[]
-    advertiser?: DomainAdvertiser
     inspectionSchedule?: {
-      times: Array<{
-        openingTime: string
-        closingTime: string
-      }>
+      times: DomainInspectionTime[]
     }
-    listingSlug: string
   }
 }
 
@@ -87,13 +97,40 @@ interface DomainListingDetail {
   seoUrl?: string
 }
 
+// Provider-independent intermediate shapes. Each Domain endpoint is reduced to these,
+// then built into a DTO in one place, so a new DTO field is added once.
+interface NormalizedSummary {
+  id: number
+  address: string
+  suburb: string
+  state: string
+  postcode: string
+  price?: number | undefined
+  displayPrice?: string | undefined
+  bedrooms: number
+  bathrooms: number
+  carSpaces?: number | undefined
+  propertyType?: string | undefined
+  latitude?: number | undefined
+  longitude?: number | undefined
+  media?: DomainMediaItem[] | undefined
+  inspections: DomainInspectionTime[]
+}
+
+interface NormalizedDetail extends NormalizedSummary {
+  landSizeSqm?: number | undefined
+  description?: string | undefined
+  listingUrl?: string | undefined
+  advertiser?: DomainAdvertiser | undefined
+}
+
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim()
 }
 
 function mapInspectionTimes(
   listingId: string,
-  times: Array<{ openingTime: string; closingTime: string }>,
+  times: DomainInspectionTime[],
 ): OpenHouseDTO[] {
   return times.map((time, index) => ({
     externalId: `${listingId}-${index}`,
@@ -108,12 +145,12 @@ function mapImages(media: DomainMediaItem[] | undefined): string[] {
 
   return media
     .filter(
-      (item): item is DomainMediaItem & { url: string } =>
-        Boolean(item.url) &&
-        (!item.category ||
-          item.category.toLowerCase() === DOMAIN_MEDIA_CATEGORY_IMAGE),
+      (item) =>
+        !item.category ||
+        item.category.toLowerCase() === DOMAIN_MEDIA_CATEGORY_IMAGE,
     )
-    .map((item) => item.url)
+    .map((item) => toSafeUrl(item.url, DOMAIN_LISTING_BASE_URL))
+    .filter((url): url is string => url !== null)
 }
 
 // Domain's public responses do not expose agent phone/email, so those stay null.
@@ -126,73 +163,90 @@ function mapAgent(advertiser: DomainAdvertiser | undefined): AgentDTO | null {
     agencyName: advertiser?.name ?? null,
     phone: null,
     email: null,
-    photoUrl: contact.photoUrl ?? null,
+    photoUrl: toSafeUrl(contact.photoUrl, DOMAIN_LISTING_BASE_URL),
   }
 }
 
-export function mapSearchResultToDTO(item: DomainSearchListing): PropertyDTO {
-  const { listing } = item
+function toSummaryDTO(listing: NormalizedSummary): PropertySummaryDTO {
   const externalId = String(listing.id)
 
   return {
     externalId,
-    source: "domain",
-    address: listing.propertyDetails.displayableAddress,
-    suburb: listing.propertyDetails.suburb,
-    state: listing.propertyDetails.state,
-    postcode: listing.propertyDetails.postcode,
-    price: listing.priceDetails?.price ?? null,
-    displayPrice: listing.priceDetails?.displayPrice ?? "Price withheld",
-    bedrooms: listing.propertyDetails.bedrooms,
-    bathrooms: listing.propertyDetails.bathrooms,
-    carSpaces: listing.propertyDetails.carspaces ?? null,
-    landSizeSqm: listing.propertyDetails.landArea ?? null,
-    propertyType: listing.propertyDetails.propertyType,
-    latitude: listing.propertyDetails.latitude ?? null,
-    longitude: listing.propertyDetails.longitude ?? null,
-    description: listing.summaryDescription
-      ? stripHtml(listing.summaryDescription)
-      : null,
-    listingUrl: `https://www.domain.com.au/${listing.listingSlug}`,
-    images: mapImages(listing.media),
-    agent: mapAgent(listing.advertiser),
-    openHouses: listing.inspectionSchedule?.times
-      ? mapInspectionTimes(externalId, listing.inspectionSchedule.times)
-      : [],
+    source: SOURCE_DOMAIN,
+    address: listing.address,
+    suburb: listing.suburb,
+    state: listing.state,
+    postcode: listing.postcode,
+    price: listing.price ?? null,
+    displayPrice: listing.displayPrice ?? PRICE_WITHHELD_LABEL,
+    bedrooms: listing.bedrooms,
+    bathrooms: listing.bathrooms,
+    carSpaces: listing.carSpaces ?? null,
+    propertyType: listing.propertyType ?? UNKNOWN_PROPERTY_TYPE,
+    latitude: listing.latitude ?? null,
+    longitude: listing.longitude ?? null,
+    thumbnailUrl: mapImages(listing.media)[0] ?? null,
+    openHouses: mapInspectionTimes(externalId, listing.inspections),
   }
 }
 
-export function mapDetailToDTO(detail: DomainListingDetail): PropertyDTO {
-  const externalId = String(detail.id)
-
+function toDetailDTO(listing: NormalizedDetail): PropertyDetailDTO {
   return {
-    externalId,
-    source: "domain",
+    ...toSummaryDTO(listing),
+    landSizeSqm: listing.landSizeSqm ?? null,
+    description: listing.description ? stripHtml(listing.description) : null,
+    listingUrl: toSafeUrl(listing.listingUrl, DOMAIN_LISTING_BASE_URL),
+    images: mapImages(listing.media),
+    agent: mapAgent(listing.advertiser),
+  }
+}
+
+export function mapSearchResultToDTO(item: DomainSearchListing): PropertySummaryDTO {
+  const { listing } = item
+  const details = listing.propertyDetails
+
+  return toSummaryDTO({
+    id: listing.id,
+    address: details.displayableAddress,
+    suburb: details.suburb,
+    state: details.state,
+    postcode: details.postcode,
+    price: listing.priceDetails?.price,
+    displayPrice: listing.priceDetails?.displayPrice,
+    bedrooms: details.bedrooms,
+    bathrooms: details.bathrooms,
+    carSpaces: details.carspaces,
+    propertyType: details.propertyType,
+    latitude: details.latitude,
+    longitude: details.longitude,
+    media: listing.media,
+    inspections: listing.inspectionSchedule?.times ?? [],
+  })
+}
+
+export function mapDetailToDTO(detail: DomainListingDetail): PropertyDetailDTO {
+  return toDetailDTO({
+    id: detail.id,
     address: detail.addressParts.displayAddress,
     suburb: detail.addressParts.suburb,
     state: detail.addressParts.stateAbbreviation.toUpperCase(),
     postcode: detail.addressParts.postcode,
-    price: detail.priceDetails?.price ?? null,
-    displayPrice: detail.priceDetails?.displayPrice ?? "Price withheld",
+    price: detail.priceDetails?.price,
+    displayPrice: detail.priceDetails?.displayPrice,
     bedrooms: detail.bedrooms,
     bathrooms: detail.bathrooms,
-    carSpaces: detail.carspaces ?? null,
-    landSizeSqm: detail.landAreaSqm ?? null,
-    propertyType: detail.propertyTypes?.[0] ?? "Unknown",
-    latitude: detail.geoLocation?.latitude ?? null,
-    longitude: detail.geoLocation?.longitude ?? null,
-    description: detail.description ?? null,
-    listingUrl: detail.seoUrl ?? null,
-    images: mapImages(detail.media),
-    agent: mapAgent(detail.advertiser),
-    openHouses: detail.inspectionDetails?.inspections
-      ? mapInspectionTimes(
-          externalId,
-          detail.inspectionDetails.inspections.map((i) => ({
-            openingTime: i.openingDateTime,
-            closingTime: i.closingDateTime,
-          })),
-        )
-      : [],
-  }
+    carSpaces: detail.carspaces,
+    propertyType: detail.propertyTypes?.[0],
+    latitude: detail.geoLocation?.latitude,
+    longitude: detail.geoLocation?.longitude,
+    media: detail.media,
+    inspections: (detail.inspectionDetails?.inspections ?? []).map((i) => ({
+      openingTime: i.openingDateTime,
+      closingTime: i.closingDateTime,
+    })),
+    landSizeSqm: detail.landAreaSqm,
+    description: detail.description,
+    listingUrl: detail.seoUrl,
+    advertiser: detail.advertiser,
+  })
 }

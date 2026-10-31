@@ -1,27 +1,14 @@
-import type { PropertyDTO } from "../types/property.js"
+import type { PropertyDetailDTO } from "../types/property.js"
+import { SOURCE_MOCK } from "../constants/domain.js"
+import { daysFromNow, mockImages } from "../helper/mockData.js"
 
 // Sample properties for local development and testing.
 // Shapes are identical to what DomainPropertyProvider produces.
 // Open house times are relative to server start so "upcoming" is never empty.
-
-function daysFromNow(days: number, hour: number, minute = 0): Date {
-  const date = new Date()
-  date.setDate(date.getDate() + days)
-  date.setHours(hour, minute, 0, 0)
-  return date
-}
-
-function mockImages(seed: string, count: number): string[] {
-  return Array.from(
-    { length: count },
-    (_, index) => `https://picsum.photos/seed/${seed}-${index + 1}/1200/800`,
-  )
-}
-
-export const mockProperties: PropertyDTO[] = [
+export const mockProperties: PropertyDetailDTO[] = [
   {
     externalId: "mock-1",
-    source: "mock",
+    source: SOURCE_MOCK,
     address: "12 Example Street, Brisbane",
     suburb: "Brisbane",
     state: "QLD",
@@ -38,6 +25,7 @@ export const mockProperties: PropertyDTO[] = [
     description: "A lovely modern house close to the city centre.",
     listingUrl: "https://example.com/mock-1",
     images: mockImages("mock-1", 6),
+    thumbnailUrl: mockImages("mock-1", 1)[0] ?? null,
     agent: {
       name: "Sarah Mitchell",
       agencyName: "Harbour Realty",
@@ -62,7 +50,7 @@ export const mockProperties: PropertyDTO[] = [
   },
   {
     externalId: "mock-2",
-    source: "mock",
+    source: SOURCE_MOCK,
     address: "45 Sample Avenue, South Brisbane",
     suburb: "South Brisbane",
     state: "QLD",
@@ -79,6 +67,7 @@ export const mockProperties: PropertyDTO[] = [
     description: "Cosy apartment with river views.",
     listingUrl: "https://example.com/mock-2",
     images: mockImages("mock-2", 3),
+    thumbnailUrl: mockImages("mock-2", 1)[0] ?? null,
     // Agent with only a name and agency: exercises missing phone/email/photo
     agent: {
       name: "James Carter",
@@ -105,7 +94,7 @@ export const mockProperties: PropertyDTO[] = [
   },
   {
     externalId: "mock-3",
-    source: "mock",
+    source: SOURCE_MOCK,
     address: "7 Test Court, New Farm",
     suburb: "New Farm",
     state: "QLD",
@@ -123,12 +112,13 @@ export const mockProperties: PropertyDTO[] = [
     listingUrl: "https://example.com/mock-3",
     // No images, no agent, no open houses: exercises every empty state
     images: [],
+    thumbnailUrl: null,
     agent: null,
     openHouses: [],
   },
   {
     externalId: "mock-4",
-    source: "mock",
+    source: SOURCE_MOCK,
     address: "88 Placeholder Road, West End",
     suburb: "West End",
     state: "QLD",
@@ -145,6 +135,7 @@ export const mockProperties: PropertyDTO[] = [
     description: "Luxury family home with pool.",
     listingUrl: "https://example.com/mock-4",
     images: mockImages("mock-4", 5),
+    thumbnailUrl: mockImages("mock-4", 1)[0] ?? null,
     agent: {
       name: "Olivia Nguyen",
       agencyName: "Southside Estates",
@@ -163,7 +154,7 @@ export const mockProperties: PropertyDTO[] = [
   },
   {
     externalId: "mock-5",
-    source: "mock",
+    source: SOURCE_MOCK,
     address: "3 Fixture Lane, Fortitude Valley",
     suburb: "Fortitude Valley",
     state: "QLD",
@@ -180,6 +171,7 @@ export const mockProperties: PropertyDTO[] = [
     description: "Compact studio apartment, perfect for first home buyers.",
     listingUrl: "https://example.com/mock-5",
     images: mockImages("mock-5", 1),
+    thumbnailUrl: mockImages("mock-5", 1)[0] ?? null,
     agent: null,
     openHouses: [],
   },

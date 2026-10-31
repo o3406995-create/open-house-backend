@@ -1,5 +1,5 @@
 import type { PropertyDataProvider } from "./propertyDataProvider.js"
-import type { PropertyDTO, PropertySearchCriteria } from "../types/property.js"
+import type { PropertyDetailDTO, PropertySearchCriteria, PropertySummaryDTO } from "../types/property.js"
 import { mapSearchResultToDTO, mapDetailToDTO } from "../mappers/domainPropertyMapper.js"
 import { AppError } from "../lib/AppError.js"
 import {
@@ -99,7 +99,7 @@ function buildSearchBody(criteria: PropertySearchCriteria) {
 }
 
 export const domainPropertyProvider: PropertyDataProvider = {
-  search: async (criteria: PropertySearchCriteria): Promise<PropertyDTO[]> => {
+  search: async (criteria: PropertySearchCriteria): Promise<PropertySummaryDTO[]> => {
     const response = await domainFetch("/listings/residential/_search", {
       method: "POST",
       body: JSON.stringify(buildSearchBody(criteria)),
@@ -113,7 +113,7 @@ export const domainPropertyProvider: PropertyDataProvider = {
       .map((item) => mapSearchResultToDTO(item as Parameters<typeof mapSearchResultToDTO>[0]))
   },
 
-  getById: async (externalId: string): Promise<PropertyDTO | null> => {
+  getById: async (externalId: string): Promise<PropertyDetailDTO | null> => {
     const response = await domainFetch(`/listings/${externalId}`)
 
     if (response.status === 404) {

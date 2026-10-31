@@ -25,5 +25,3 @@ export const SEARCH_ERROR_PRICE_RANGE = "minPrice must not be greater than maxPr
 export const SEARCH_ERROR_BEDROOM_RANGE = "minBedrooms must not be greater than maxBedrooms"
 export const SEARCH_ERROR_BATHROOM_RANGE = "minBathrooms must not be greater than maxBathrooms"
 export const SEARCH_ERROR_DATE_RANGE = "startDate must not be after endDate"
-
-export const DOMAIN_MEDIA_CATEGORY_IMAGE = "image"
