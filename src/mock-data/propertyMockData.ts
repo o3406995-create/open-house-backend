@@ -1,7 +1,23 @@
 import type { PropertyDTO } from "../types/property.js"
 
-// Hardcoded sample properties for local development and testing.
+// Sample properties for local development and testing.
 // Shapes are identical to what DomainPropertyProvider produces.
+// Open house times are relative to server start so "upcoming" is never empty.
+
+function daysFromNow(days: number, hour: number, minute = 0): Date {
+  const date = new Date()
+  date.setDate(date.getDate() + days)
+  date.setHours(hour, minute, 0, 0)
+  return date
+}
+
+function mockImages(seed: string, count: number): string[] {
+  return Array.from(
+    { length: count },
+    (_, index) => `https://picsum.photos/seed/${seed}-${index + 1}/1200/800`,
+  )
+}
+
 export const mockProperties: PropertyDTO[] = [
   {
     externalId: "mock-1",
@@ -14,16 +30,32 @@ export const mockProperties: PropertyDTO[] = [
     displayPrice: "$650,000",
     bedrooms: 3,
     bathrooms: 2,
+    carSpaces: 2,
+    landSizeSqm: 603,
     propertyType: "House",
     latitude: -27.4698,
     longitude: 153.0251,
     description: "A lovely modern house close to the city centre.",
     listingUrl: "https://example.com/mock-1",
+    images: mockImages("mock-1", 6),
+    agent: {
+      name: "Sarah Mitchell",
+      agencyName: "Harbour Realty",
+      phone: "0400 123 456",
+      email: "sarah@example.com",
+      photoUrl: "https://i.pravatar.cc/200?img=47",
+    },
     openHouses: [
       {
         externalId: "mock-1-0",
-        startDatetime: new Date("2026-10-18T10:00:00"),
-        endDatetime: new Date("2026-10-18T10:30:00"),
+        startDatetime: daysFromNow(2, 10),
+        endDatetime: daysFromNow(2, 10, 30),
+        status: "SCHEDULED",
+      },
+      {
+        externalId: "mock-1-1",
+        startDatetime: daysFromNow(3, 14),
+        endDatetime: daysFromNow(3, 14, 30),
         status: "SCHEDULED",
       },
     ],
@@ -39,22 +71,34 @@ export const mockProperties: PropertyDTO[] = [
     displayPrice: "$480,000",
     bedrooms: 2,
     bathrooms: 1,
+    carSpaces: 1,
+    landSizeSqm: null,
     propertyType: "Apartment",
     latitude: -27.4818,
     longitude: 153.0171,
     description: "Cosy apartment with river views.",
     listingUrl: "https://example.com/mock-2",
+    images: mockImages("mock-2", 3),
+    // Agent with only a name and agency: exercises missing phone/email/photo
+    agent: {
+      name: "James Carter",
+      agencyName: "River City Property",
+      phone: null,
+      email: null,
+      photoUrl: null,
+    },
     openHouses: [
       {
+        // Already finished: exercises past vs upcoming grouping
         externalId: "mock-2-0",
-        startDatetime: new Date("2026-10-19T11:00:00"),
-        endDatetime: new Date("2026-10-19T11:30:00"),
-        status: "SCHEDULED",
+        startDatetime: daysFromNow(-3, 11),
+        endDatetime: daysFromNow(-3, 11, 30),
+        status: "COMPLETED",
       },
       {
         externalId: "mock-2-1",
-        startDatetime: new Date("2026-10-25T13:00:00"),
-        endDatetime: new Date("2026-10-25T13:30:00"),
+        startDatetime: daysFromNow(5, 13),
+        endDatetime: daysFromNow(5, 13, 30),
         status: "SCHEDULED",
       },
     ],
@@ -70,11 +114,16 @@ export const mockProperties: PropertyDTO[] = [
     displayPrice: "Auction",
     bedrooms: 4,
     bathrooms: 3,
+    carSpaces: 2,
+    landSizeSqm: 720,
     propertyType: "House",
     latitude: -27.4654,
     longitude: 153.0509,
     description: "Spacious family home, auction coming up soon.",
     listingUrl: "https://example.com/mock-3",
+    // No images, no agent, no open houses: exercises every empty state
+    images: [],
+    agent: null,
     openHouses: [],
   },
   {
@@ -88,16 +137,26 @@ export const mockProperties: PropertyDTO[] = [
     displayPrice: "$1,200,000",
     bedrooms: 5,
     bathrooms: 3,
+    carSpaces: 3,
+    landSizeSqm: 1100,
     propertyType: "House",
     latitude: -27.4823,
     longitude: 153.0088,
     description: "Luxury family home with pool.",
     listingUrl: "https://example.com/mock-4",
+    images: mockImages("mock-4", 5),
+    agent: {
+      name: "Olivia Nguyen",
+      agencyName: "Southside Estates",
+      phone: "0411 222 333",
+      email: "olivia@example.com",
+      photoUrl: "https://i.pravatar.cc/200?img=32",
+    },
     openHouses: [
       {
         externalId: "mock-4-0",
-        startDatetime: new Date("2026-10-18T14:00:00"),
-        endDatetime: new Date("2026-10-18T14:30:00"),
+        startDatetime: daysFromNow(1, 14),
+        endDatetime: daysFromNow(1, 14, 30),
         status: "SCHEDULED",
       },
     ],
@@ -113,11 +172,15 @@ export const mockProperties: PropertyDTO[] = [
     displayPrice: "$350,000",
     bedrooms: 1,
     bathrooms: 1,
+    carSpaces: null,
+    landSizeSqm: null,
     propertyType: "Apartment",
-    latitude: -27.4560,
+    latitude: -27.456,
     longitude: 153.0344,
     description: "Compact studio apartment, perfect for first home buyers.",
     listingUrl: "https://example.com/mock-5",
+    images: mockImages("mock-5", 1),
+    agent: null,
     openHouses: [],
   },
 ]
