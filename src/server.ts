@@ -8,11 +8,13 @@ import { errorHandler } from "./middleware/errorHandler.js"
 import cookieParser from "cookie-parser"
 import usersRoutes from "./routes/users.routes.js"
 import propertyRoutes from "./routes/property.routes.js"
+import adminRoutes from "./routes/admin.routes.js"
+import { DEFAULT_CORS_ORIGIN, DEFAULT_PORT } from "./constants/server.js"
 
 const app = express()
-const PORT = 3000
+const PORT = Number(process.env.PORT ?? DEFAULT_PORT)
 
-const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:5173").split(",")
+const allowedOrigins = (process.env.CORS_ORIGIN ?? DEFAULT_CORS_ORIGIN).split(",")
 
 app.use(
   cors({
@@ -35,6 +37,8 @@ app.use("/api/auth", authRoutes)
 app.use("/api/users", usersRoutes)
 
 app.use("/api/properties", propertyRoutes)
+
+app.use("/api/admin", adminRoutes)
 
 app.use(errorHandler)
 

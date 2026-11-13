@@ -1,7 +1,11 @@
 import type { PropertyDataProvider } from "./propertyDataProvider.js"
-import type { PropertyDTO, PropertySearchCriteria } from "../types/property.js"
+import type { PropertyDetailDTO, PropertySearchCriteria, PropertySummaryDTO } from "../types/property.js"
 import { mapSearchResultToDTO, mapDetailToDTO } from "../mappers/domainPropertyMapper.js"
 import { AppError } from "../lib/AppError.js"
+import {
+  DEFAULT_DOMAIN_API_BASE_URL,
+  DEFAULT_DOMAIN_AUTH_URL,
+} from "../constants/domainApi.js"
 
 function requireEnv(name: string): string {
   const value = process.env[name]
@@ -11,8 +15,8 @@ function requireEnv(name: string): string {
   return value
 }
 
-const AUTH_URL = "https://auth.domain.com.au/v1/connect/token"
-const API_BASE_URL = "https://api.domain.com.au/v1"
+const AUTH_URL = process.env.DOMAIN_AUTH_URL || DEFAULT_DOMAIN_AUTH_URL
+const API_BASE_URL = process.env.DOMAIN_API_BASE_URL || DEFAULT_DOMAIN_API_BASE_URL
 
 let cachedToken: { value: string; expiresAt: number } | null = null
 
@@ -95,7 +99,7 @@ function buildSearchBody(criteria: PropertySearchCriteria) {
 }
 
 export const domainPropertyProvider: PropertyDataProvider = {
-  search: async (criteria: PropertySearchCriteria): Promise<PropertyDTO[]> => {
+  search: async (criteria: PropertySearchCriteria): Promise<PropertySummaryDTO[]> => {
     const response = await domainFetch("/listings/residential/_search", {
       method: "POST",
       body: JSON.stringify(buildSearchBody(criteria)),
@@ -109,7 +113,7 @@ export const domainPropertyProvider: PropertyDataProvider = {
       .map((item) => mapSearchResultToDTO(item as Parameters<typeof mapSearchResultToDTO>[0]))
   },
 
-  getById: async (externalId: string): Promise<PropertyDTO | null> => {
+  getById: async (externalId: string): Promise<PropertyDetailDTO | null> => {
     const response = await domainFetch(`/listings/${externalId}`)
 
     if (response.status === 404) {

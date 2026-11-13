@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "seed:admin": "tsx src/scripts/seedAdmin.ts"
   },
   "keywords": [],
   "author": "",

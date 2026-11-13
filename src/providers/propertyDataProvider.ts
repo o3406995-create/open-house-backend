@@ -1,6 +1,10 @@
-import type { PropertyDTO, PropertySearchCriteria } from "../types/property.js"
+import type {
+  PropertyDetailDTO,
+  PropertySearchCriteria,
+  PropertySummaryDTO,
+} from "../types/property.js"
 
 export interface PropertyDataProvider {
-  search(criteria: PropertySearchCriteria): Promise<PropertyDTO[]>
-  getById(externalId: string): Promise<PropertyDTO | null>
+  search(criteria: PropertySearchCriteria): Promise<PropertySummaryDTO[]>
+  getById(externalId: string): Promise<PropertyDetailDTO | null>
 }
