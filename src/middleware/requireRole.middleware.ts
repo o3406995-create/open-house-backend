@@ -18,4 +18,5 @@ export function requireRole(...allowedRoles: string[]) {
 
 export const requireAdmin = requireRole("ADMIN")
 export const requireAgent = requireRole("AGENT")
+export const requireUser = requireRole("USER")
 export const requireAdminOrAgent = requireRole("ADMIN", "AGENT")
