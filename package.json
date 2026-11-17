@@ -5,7 +5,13 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "seed:admin": "tsx src/scripts/seedAdmin.ts"
+    "dev:cloud": "tsx watch --env-file=env/dev.env src/server.ts",
+    "sit": "tsx watch --env-file=env/sit.env src/server.ts",
+    "uat": "tsx watch --env-file=env/uat.env src/server.ts",
+    "seed:admin": "tsx src/scripts/seedAdmin.ts",
+    "seed:admin:dev": "tsx --env-file=env/dev.env src/scripts/seedAdmin.ts",
+    "seed:admin:sit": "tsx --env-file=env/sit.env src/scripts/seedAdmin.ts",
+    "seed:admin:uat": "tsx --env-file=env/uat.env src/scripts/seedAdmin.ts"
   },
   "keywords": [],
   "author": "",

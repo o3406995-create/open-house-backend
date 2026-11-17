@@ -1,4 +1,4 @@
-import "dotenv/config"
+import "../lib/loadEnv.js"
 import bcrypt from "bcrypt"
 import { prisma } from "../lib/prisma.js"
 import { BCRYPT_SALT_ROUNDS } from "../constants/auth.js"
