@@ -197,6 +197,19 @@ components:
         property:
           $ref: "#/components/schemas/PropertySummary"
 
+    SavedPropertyListItem:
+      allOf:
+        - $ref: "#/components/schemas/SavedProperty"
+        - type: object
+          properties:
+            listingStatus:
+              type: string
+              enum: [AVAILABLE, REMOVED, UNKNOWN]
+              description: >
+                AVAILABLE: fetched from the data source just now. REMOVED: the data source no
+                longer has the listing (the stored snapshot is shown). UNKNOWN: it could not be
+                checked (the stored snapshot is shown).
+
 paths:
   /api/auth/register:
     post:
@@ -531,3 +544,56 @@ paths:
           description: Only USER accounts can save properties
         "404":
           description: Property not found
+    get:
+      summary: List the saved properties of the current user
+      description: >
+        USER accounts only, newest first. Each property is checked against the active data
+        source; listingStatus tells whether the data is fresh, the listing is gone, or it
+        could not be checked. The open houses of each property only include those that have
+        not finished yet.
+      tags:
+        - Saved Properties
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: Saved properties
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  savedProperties:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SavedPropertyListItem"
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  pageSize:
+                    type: integer
+        "400":
+          description: Invalid page or pageSize
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Only USER accounts have saved properties
