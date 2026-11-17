@@ -104,17 +104,21 @@ model AgentProfile {
 
 model Property {
   property_id   Int            @id @default(autoincrement())
+  external_id   String?
+  source        String?
   address       String
   suburb        String
   state         String
   postcode      String
-  price         Int
+  price         Int?
+  display_price String?
   bedrooms      Int
   bathrooms     Int
   property_type String
   latitude      Float?
   longitude     Float?
   description   String?        @db.Text
+  listing_url   String?        @db.VarChar(2048)
   status        PropertyStatus @default(DRAFT)
   created_at    DateTime       @default(now())
   updated_at    DateTime       @updatedAt
@@ -125,6 +129,8 @@ model Property {
   notes           Note[]
   trackedByAgents AgentTrackedProperty[]
   notifications   Notification[]
+
+  @@unique([source, external_id])
 }
 
 model SavedProperty {
