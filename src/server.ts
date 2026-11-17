@@ -15,7 +15,10 @@ import savedPropertyRoutes from "./routes/savedProperty.routes.js"
 const app = express()
 const PORT = Number(process.env.PORT ?? DEFAULT_PORT)
 
-const allowedOrigins = (process.env.CORS_ORIGIN ?? DEFAULT_CORS_ORIGIN).split(",")
+const allowedOrigins = (process.env.CORS_ORIGIN ?? DEFAULT_CORS_ORIGIN)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean)
 
 app.use(
   cors({
