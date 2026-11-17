@@ -1,12 +1,4 @@
 node_modules
-# Keep environment variables out of version control
-.env
-.env.dev
-.env.uat
-env/local.env
-env/dev.env
-env/sit.env
-env/uat.env
 
 /src/generated/prisma
 .DS_Store
