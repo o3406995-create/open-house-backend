@@ -185,6 +185,18 @@ components:
             agent:
               $ref: "#/components/schemas/Agent"
 
+    SavedProperty:
+      type: object
+      properties:
+        savedPropertyId:
+          type: integer
+          example: 1
+        savedAt:
+          type: string
+          format: date-time
+        property:
+          $ref: "#/components/schemas/PropertySummary"
+
 paths:
   /api/auth/register:
     post:
@@ -460,5 +472,62 @@ paths:
                 $ref: "#/components/schemas/ValidationError"
         "401":
           description: Not authenticated
+        "404":
+          description: Property not found
+
+  /api/saved-properties:
+    post:
+      summary: Save a property
+      description: >
+        USER accounts only. The property is looked up through the active provider by
+        externalId (never taken from the request body) and a snapshot is stored locally.
+        Saving the same property again is not an error and returns the existing record.
+      tags:
+        - Saved Properties
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - externalId
+              properties:
+                externalId:
+                  type: string
+                  maxLength: 64
+                  pattern: "^[A-Za-z0-9_-]+$"
+                  example: mock-1
+      responses:
+        "201":
+          description: Property saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  savedProperty:
+                    $ref: "#/components/schemas/SavedProperty"
+        "200":
+          description: Property was already saved; the existing record is returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  savedProperty:
+                    $ref: "#/components/schemas/SavedProperty"
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Only USER accounts can save properties
         "404":
           description: Property not found

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
     "dev:cloud": "tsx watch --env-file=env/dev.env src/server.ts",
     "sit": "tsx watch --env-file=env/sit.env src/server.ts",
     "uat": "tsx watch --env-file=env/uat.env src/server.ts",
