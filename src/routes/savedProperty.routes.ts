@@ -43,7 +43,42 @@ const router = Router()
  *         description: Only USER accounts can save properties
  *       404:
  *         description: Property not found
+ *   get:
+ *     summary: List the saved properties of the current user
+ *     description: >
+ *       USER accounts only, newest first. Each property is checked against the active data
+ *       source; listingStatus tells whether the data is fresh (AVAILABLE), the listing is gone
+ *       (REMOVED) or could not be checked (UNKNOWN). The latter two show the stored snapshot.
+ *       Only open houses that have not finished are returned.
+ *     tags:
+ *       - Saved Properties
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: Saved properties, returned as { savedProperties, total, page, pageSize }
+ *       400:
+ *         description: Invalid page or pageSize
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Only USER accounts have saved properties
  */
 router.post("/", requireAuth, requireUser, savedPropertyController.save)
+router.get("/", requireAuth, requireUser, savedPropertyController.list)
 
 export default router

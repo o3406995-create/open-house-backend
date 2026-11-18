@@ -34,4 +34,26 @@ export const savedPropertyRepository = {
       return { created: true, savedProperty }
     })
   },
+
+  // The user's own saved properties, newest first, with the stored snapshot.
+  // Only rows that can be matched to an external listing are returned.
+  listForUser: async (user_id: number, page: number, pageSize: number) => {
+    const where = {
+      user_id,
+      property: { external_id: { not: null }, source: { not: null } },
+    }
+
+    const [records, total] = await prisma.$transaction([
+      prisma.savedProperty.findMany({
+        where,
+        include: { property: true },
+        orderBy: [{ saved_at: "desc" }, { saved_property_id: "desc" }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.savedProperty.count({ where }),
+    ])
+
+    return { records, total }
+  },
 }

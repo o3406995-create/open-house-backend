@@ -3,3 +3,9 @@ node_modules
 /src/generated/prisma
 .DS_Store
 **/.DS_Store
+.env
+.env.*
+!.env.example
+
+# Local secrets must never be committed
+env/local.env
