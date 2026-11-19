@@ -81,4 +81,38 @@ const router = Router()
 router.post("/", requireAuth, requireUser, savedPropertyController.save)
 router.get("/", requireAuth, requireUser, savedPropertyController.list)
 
+/**
+ * @swagger
+ * /api/saved-properties/{savedPropertyId}:
+ *   delete:
+ *     summary: Remove a saved property
+ *     description: >
+ *       USER accounts only. Removes one of the current user's saved properties. A saved
+ *       property that does not exist, or that belongs to another user, returns 404.
+ *       The stored listing snapshot is kept because other users may have saved it too.
+ *     tags:
+ *       - Saved Properties
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: savedPropertyId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       204:
+ *         description: Removed
+ *       400:
+ *         description: Invalid id
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Only USER accounts have saved properties
+ *       404:
+ *         description: Saved property not found
+ */
+router.delete("/:savedPropertyId", requireAuth, requireUser, savedPropertyController.remove)
+
 export default router

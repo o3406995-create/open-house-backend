@@ -56,4 +56,14 @@ export const savedPropertyRepository = {
 
     return { records, total }
   },
+
+  // Deletes one saved property, but only when it belongs to the user. Returns how many
+  // rows were deleted (0 when it does not exist or belongs to someone else).
+  // The Property row it points to is never touched: other users may have saved it too.
+  deleteForUser: async (user_id: number, saved_property_id: number) => {
+    const result = await prisma.savedProperty.deleteMany({
+      where: { saved_property_id, user_id },
+    })
+    return result.count
+  },
 }

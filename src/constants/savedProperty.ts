@@ -17,6 +17,11 @@ export const SAVED_PROVIDER_CONCURRENCY = 5
 export const SAVED_ERROR_PAGE = "page must be a positive integer"
 export const SAVED_ERROR_PAGE_SIZE = `pageSize must be an integer between 1 and ${SAVED_MAX_PAGE_SIZE}`
 
+// The largest value an INT column can hold; anything bigger cannot be a valid id
+export const SAVED_MAX_ID = 2147483647
+export const SAVED_ERROR_ID = "savedPropertyId must be a positive integer"
+export const SAVED_ERROR_NOT_FOUND = "Saved property not found"
+
 export const LISTING_STATUS = {
   // Fetched from the data source just now
   AVAILABLE: "AVAILABLE",
