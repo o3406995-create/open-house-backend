@@ -1,6 +1,6 @@
 # Open House Backend — Code Review Prompt
 
-Review only the diff between the base branch and the head branch. Do not edit files. Report findings only.
+Pull requests merge into `main`. Review only the diff from `main` to the head branch. Do not use another feature branch as the base. Do not edit files. Report findings only.
 
 Check these areas when the diff touches them:
 
@@ -70,6 +70,6 @@ No action items, if there are no findings.
 
 ### Review limitations
 
-- **Diff reviewed:** [base] to [head]
+- **Diff reviewed:** `main` to [head]
 - **Tests:** not run
 - **Not inspected:** [areas left unread]
