@@ -4,6 +4,7 @@ import { savedPropertyService } from "../services/savedProperty.service.js"
 import {
   savePropertySchema,
   listSavedPropertiesSchema,
+  savedPropertyIdParamSchema,
 } from "../validators/savedProperty.validator.js"
 import { VALIDATION_ERROR_MESSAGE } from "../constants/property.js"
 
@@ -44,6 +45,24 @@ export const savedPropertyController = {
 
       const result = await savedPropertyService.list(Number(req.userId), parsed.data)
       return res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  remove: async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const parsed = savedPropertyIdParamSchema.safeParse(req.params)
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: VALIDATION_ERROR_MESSAGE,
+          errors: parsed.error.flatten().fieldErrors,
+        })
+      }
+
+      await savedPropertyService.remove(Number(req.userId), parsed.data.savedPropertyId)
+      return res.status(204).send()
     } catch (err) {
       next(err)
     }

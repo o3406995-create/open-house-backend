@@ -1,5 +1,6 @@
 import { savedPropertyRepository } from "../repositories/savedProperty.repository.js"
 import { propertyService } from "./property.service.js"
+import { AppError } from "../lib/AppError.js"
 import { toPropertyRecord, type PropertyRecordInput } from "../mappers/propertyRecordMapper.js"
 import { snapshotToSummary } from "../mappers/savedSnapshotMapper.js"
 import { toSummary } from "../helper/propertySummary.js"
@@ -9,6 +10,7 @@ import { isUniqueConstraintError } from "../helper/prismaErrors.js"
 import {
   SAVE_PROPERTY_MAX_ATTEMPTS,
   SAVED_PROVIDER_CONCURRENCY,
+  SAVED_ERROR_NOT_FOUND,
   LISTING_STATUS,
   type ListingStatus,
 } from "../constants/savedProperty.js"
@@ -100,6 +102,16 @@ export const savedPropertyService = {
       total,
       page,
       pageSize,
+    }
+  },
+
+  remove: async (userId: number, savedPropertyId: number) => {
+    const deleted = await savedPropertyRepository.deleteForUser(userId, savedPropertyId)
+
+    // "Does not exist" and "belongs to someone else" look the same on purpose, so ids of
+    // other users cannot be probed.
+    if (deleted === 0) {
+      throw new AppError(SAVED_ERROR_NOT_FOUND, 404)
     }
   },
 }
