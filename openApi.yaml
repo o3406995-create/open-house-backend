@@ -598,7 +598,6 @@ paths:
         "403":
           description: Only USER accounts have saved properties
 
-  
   /api/saved-properties/{savedPropertyId}:
     delete:
       summary: Remove a saved property
