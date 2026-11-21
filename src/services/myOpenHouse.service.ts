@@ -4,7 +4,7 @@ import { AppError } from "../lib/AppError.js"
 import { toPropertyRecord } from "../mappers/propertyRecordMapper.js"
 import { toOpenHouseRecord } from "../mappers/openHouseRecordMapper.js"
 import { toSummary } from "../helper/propertySummary.js"
-import { retryOnUniqueConflict } from "../helper/retryOnUniqueConflict.js"
+import { retryOnConflict } from "../helper/retryOnConflict.js"
 import {
   MY_OPEN_HOUSE_MAX_ATTEMPTS,
   MY_OPEN_HOUSE_ERROR_NOT_FOUND,
@@ -38,7 +38,7 @@ export const myOpenHouseService = {
       throw new AppError(MY_OPEN_HOUSE_ERROR_NOT_AVAILABLE, 409)
     }
 
-    const { created, userOpenHouse } = await retryOnUniqueConflict(
+    const { created, userOpenHouse } = await retryOnConflict(
       () =>
         myOpenHouseRepository.addForUser(
           userId,
