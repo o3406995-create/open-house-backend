@@ -148,6 +148,8 @@ model SavedProperty {
 model OpenHouse {
   openhouse_id   Int             @id @default(autoincrement())
   property_id    Int
+  // Id of the open house at the external data source, unique within its property
+  external_id    String?
   start_datetime DateTime
   end_datetime   DateTime
   status         OpenHouseStatus @default(SCHEDULED)
@@ -157,6 +159,8 @@ model OpenHouse {
   property       Property        @relation(fields: [property_id], references: [property_id])
   userOpenHouses UserOpenHouse[]
   notifications  Notification[]
+
+  @@unique([property_id, external_id])
 }
 
 model PropertyImage {

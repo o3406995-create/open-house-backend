@@ -3,6 +3,8 @@
 export const SAVE_PROPERTY_MAX_ATTEMPTS = 3
 
 export const PRISMA_UNIQUE_CONSTRAINT_CODE = "P2002"
+// Prisma reports a deadlock or a write conflict between concurrent transactions with this code
+export const PRISMA_TRANSACTION_CONFLICT_CODE = "P2034"
 
 export const PROPERTY_STATUS_ACTIVE = "ACTIVE" as const
 

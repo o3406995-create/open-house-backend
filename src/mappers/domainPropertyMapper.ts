@@ -128,16 +128,25 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim()
 }
 
-function mapInspectionTimes(
+const MILLISECONDS_PER_SECOND = 1000
+
+// The id is based on the opening time, not on the position in the list: Domain drops an
+// inspection from the list once it has passed, so a position would then point at a
+// different inspection. Seconds since 1970 keep the id to digits, which the id validators accept.
+export function mapInspectionTimes(
   listingId: string,
   times: DomainInspectionTime[],
 ): OpenHouseDTO[] {
-  return times.map((time, index) => ({
-    externalId: `${listingId}-${index}`,
-    startDatetime: new Date(time.openingTime),
-    endDatetime: new Date(time.closingTime),
-    status: "SCHEDULED",
-  }))
+  return times.map((time) => {
+    const startDatetime = new Date(time.openingTime)
+
+    return {
+      externalId: `${listingId}-${Math.floor(startDatetime.getTime() / MILLISECONDS_PER_SECOND)}`,
+      startDatetime,
+      endDatetime: new Date(time.closingTime),
+      status: "SCHEDULED" as const,
+    }
+  })
 }
 
 function mapImages(media: DomainMediaItem[] | undefined): string[] {
