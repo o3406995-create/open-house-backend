@@ -679,3 +679,37 @@ paths:
           description: Property not found, or the open house does not belong to it
         "409":
           description: The open house was cancelled or has already finished
+    get:
+      summary: List My Open Houses
+      description: >
+        USER accounts only. The open houses the user added, grouped into today, upcoming,
+        attended and expired. Today is the calendar day in the time zone given by timeZone
+        (the browser's time zone; Australia/Brisbane when it is not sent). Attended is what the
+        user confirmed; expired is an open house that has finished without being attended.
+        Each entry carries the property snapshot stored when it was added; it is not checked
+        against the data source again.
+      tags:
+        - My Open Houses
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: timeZone
+          description: IANA time zone name (URL encoded)
+          schema:
+            type: string
+            default: Australia/Brisbane
+          example: Australia/Brisbane
+      responses:
+        "200":
+          description: Returned as { timeZone, counts, myOpenHouses } with the groups today, upcoming, attended and expired
+        "400":
+          description: Unknown time zone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Only USER accounts have My Open Houses

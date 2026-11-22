@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma.js"
 import type { PropertyRecordInput } from "../mappers/propertyRecordMapper.js"
 import type { OpenHouseRecordInput } from "../mappers/openHouseRecordMapper.js"
+import { MY_OPEN_HOUSES_LIMIT } from "../constants/myOpenHouse.js"
 
 export const myOpenHouseRepository = {
   // One transaction: refresh the property and open house snapshots, then create the user's
@@ -49,6 +50,16 @@ export const myOpenHouseRepository = {
       })
 
       return { created: true, userOpenHouse }
+    })
+  },
+
+  // The user's own open houses with the stored snapshots, earliest first
+  listForUser: (user_id: number) => {
+    return prisma.userOpenHouse.findMany({
+      where: { user_id },
+      include: { openHouse: { include: { property: true } } },
+      orderBy: [{ openHouse: { start_datetime: "asc" } }, { user_openHouse_id: "asc" }],
+      take: MY_OPEN_HOUSES_LIMIT,
     })
   },
 }
