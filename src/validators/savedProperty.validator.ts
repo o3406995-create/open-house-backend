@@ -1,10 +1,10 @@
 import { z } from "zod"
 import { propertyIdParamSchema } from "./property.validator.js"
+import { positiveIntIdSchema } from "./positiveIntId.js"
 import {
   SAVED_DEFAULT_PAGE,
   SAVED_DEFAULT_PAGE_SIZE,
   SAVED_MAX_PAGE_SIZE,
-  SAVED_MAX_ID,
   SAVED_ERROR_PAGE,
   SAVED_ERROR_PAGE_SIZE,
   SAVED_ERROR_ID,
@@ -26,11 +26,7 @@ export const listSavedPropertiesSchema = z.object({
 })
 
 export const savedPropertyIdParamSchema = z.object({
-  savedPropertyId: z.coerce
-    .number()
-    .int(SAVED_ERROR_ID)
-    .min(1, SAVED_ERROR_ID)
-    .max(SAVED_MAX_ID, SAVED_ERROR_ID),
+  savedPropertyId: positiveIntIdSchema(SAVED_ERROR_ID),
 })
 
 export type SavePropertyInput = z.infer<typeof savePropertySchema>

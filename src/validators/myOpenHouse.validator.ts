@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { propertyIdParamSchema } from "./property.validator.js"
+import { positiveIntIdSchema } from "./positiveIntId.js"
 import { PROPERTY_ID_MAX_LENGTH, PROPERTY_ID_PATTERN } from "../constants/property.js"
 import { isValidTimeZone } from "../helper/timeZone.js"
 import {
@@ -7,8 +8,6 @@ import {
   MY_OPEN_HOUSE_ERROR_INVALID_ENTRY_ID,
   MY_OPEN_HOUSE_ERROR_INVALID_ID,
   MY_OPEN_HOUSE_ERROR_INVALID_TIME_ZONE,
-  MY_OPEN_HOUSE_ID_PATTERN,
-  MY_OPEN_HOUSE_MAX_ID,
   TIME_ZONE_MAX_LENGTH,
 } from "../constants/myOpenHouse.js"
 
@@ -34,14 +33,8 @@ export const listMyOpenHousesSchema = z.object({
     .default(DEFAULT_TIME_ZONE),
 })
 
-// The id is checked as text before it becomes a number. Number() alone would accept "1e2",
-// "0x10" and " 3", which are not ids.
 export const myOpenHouseIdParamSchema = z.object({
-  myOpenHouseId: z
-    .string()
-    .regex(MY_OPEN_HOUSE_ID_PATTERN, MY_OPEN_HOUSE_ERROR_INVALID_ENTRY_ID)
-    .transform(Number)
-    .refine((id) => id <= MY_OPEN_HOUSE_MAX_ID, MY_OPEN_HOUSE_ERROR_INVALID_ENTRY_ID),
+  myOpenHouseId: positiveIntIdSchema(MY_OPEN_HOUSE_ERROR_INVALID_ENTRY_ID),
 })
 
 export type AddMyOpenHouseInput = z.infer<typeof addMyOpenHouseSchema>

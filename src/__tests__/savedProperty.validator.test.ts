@@ -43,7 +43,22 @@ describe("savedPropertyIdParamSchema", () => {
     )
   })
 
-  it.each(["0", "-1", "abc", "1.5", "2147483648", "99999999999"])("rejects %s", (value) => {
+  // Number() would accept several of these ("1e2", "0x10", " 3", "3 ", "")
+  it.each([
+    "",
+    "0",
+    "-1",
+    "+3",
+    "03",
+    "1.5",
+    "1e2",
+    "0x10",
+    " 3",
+    "3 ",
+    "abc",
+    "2147483648",
+    "99999999999",
+  ])("rejects %p", (value) => {
     expect(savedPropertyIdParamSchema.safeParse({ savedPropertyId: value }).success).toBe(false)
   })
 })
