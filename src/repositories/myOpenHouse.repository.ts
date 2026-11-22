@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma.js"
 import type { PropertyRecordInput } from "../mappers/propertyRecordMapper.js"
 import type { OpenHouseRecordInput } from "../mappers/openHouseRecordMapper.js"
+import { MY_OPEN_HOUSES_LIMIT } from "../constants/myOpenHouse.js"
 
 export const myOpenHouseRepository = {
   // One transaction: refresh the property and open house snapshots, then create the user's
@@ -50,5 +51,20 @@ export const myOpenHouseRepository = {
 
       return { created: true, userOpenHouse }
     })
+  },
+
+  // The user's own open houses with the stored snapshots, earliest first. When there are
+  // more than the cap, the most recent ones are kept: finished open houses pile up over time
+  // and are the ones that can be left out. So the newest are fetched first and then turned
+  // around.
+  listForUser: async (user_id: number) => {
+    const rows = await prisma.userOpenHouse.findMany({
+      where: { user_id },
+      include: { openHouse: { include: { property: true } } },
+      orderBy: [{ openHouse: { start_datetime: "desc" } }, { user_openHouse_id: "desc" }],
+      take: MY_OPEN_HOUSES_LIMIT,
+    })
+
+    return rows.reverse()
   },
 }

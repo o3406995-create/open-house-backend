@@ -3,13 +3,17 @@ import { propertyService } from "./property.service.js"
 import { AppError } from "../lib/AppError.js"
 import { toPropertyRecord } from "../mappers/propertyRecordMapper.js"
 import { toOpenHouseRecord } from "../mappers/openHouseRecordMapper.js"
+import { groupOf, toMyOpenHouseItem, type MyOpenHouseItem } from "../mappers/myOpenHouseMapper.js"
 import { toSummary } from "../helper/propertySummary.js"
 import { retryOnConflict } from "../helper/retryOnConflict.js"
+import { startOfNextDay } from "../helper/timeZone.js"
 import {
   MY_OPEN_HOUSE_MAX_ATTEMPTS,
   MY_OPEN_HOUSE_ERROR_NOT_FOUND,
   MY_OPEN_HOUSE_ERROR_NOT_AVAILABLE,
+  MY_OPEN_HOUSE_GROUP,
   OPEN_HOUSE_STATUS_SCHEDULED,
+  type MyOpenHouseGroup,
 } from "../constants/myOpenHouse.js"
 
 export const myOpenHouseService = {
@@ -57,6 +61,44 @@ export const myOpenHouseService = {
         openHouse,
         property: toSummary(detail),
       },
+    }
+  },
+
+  // The user's open houses in four groups. "Today" is the calendar day in the given time
+  // zone. The stored snapshots are used as they are: nothing is asked of the data source.
+  list: async (userId: number, timeZone: string, now: Date = new Date()) => {
+    const rows = await myOpenHouseRepository.listForUser(userId)
+    const startOfTomorrow = startOfNextDay(now, timeZone)
+
+    const groups: Record<MyOpenHouseGroup, MyOpenHouseItem[]> = {
+      [MY_OPEN_HOUSE_GROUP.TODAY]: [],
+      [MY_OPEN_HOUSE_GROUP.UPCOMING]: [],
+      [MY_OPEN_HOUSE_GROUP.ATTENDED]: [],
+      [MY_OPEN_HOUSE_GROUP.EXPIRED]: [],
+    }
+
+    for (const row of rows) {
+      const group = groupOf(row, now, startOfTomorrow)
+      const item = toMyOpenHouseItem(row, group)
+      if (item) {
+        groups[group].push(item)
+      }
+    }
+
+    // The rows come earliest first, which suits today and upcoming. What is already done is
+    // read most recent first.
+    groups.attended.reverse()
+    groups.expired.reverse()
+
+    return {
+      timeZone,
+      counts: {
+        today: groups.today.length,
+        upcoming: groups.upcoming.length,
+        attended: groups.attended.length,
+        expired: groups.expired.length,
+      },
+      myOpenHouses: groups,
     }
   },
 }
