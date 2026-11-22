@@ -67,4 +67,17 @@ export const myOpenHouseRepository = {
 
     return rows.reverse()
   },
+
+  // Removes the user's entry only. The OpenHouse row it points to is never touched: other
+  // users may have added it too. Returns how many rows were deleted (0 when it does not
+  // exist or belongs to someone else).
+  // Nothing points at a UserOpenHouse row yet. When notes (#46) and notifications (#50) are
+  // tied to one, decide whether removing an entry removes them too, and whether an attended
+  // entry may be removed at all.
+  deleteForUser: async (user_id: number, user_openHouse_id: number) => {
+    const result = await prisma.userOpenHouse.deleteMany({
+      where: { user_openHouse_id, user_id },
+    })
+    return result.count
+  },
 }

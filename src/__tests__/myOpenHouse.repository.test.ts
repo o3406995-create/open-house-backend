@@ -1,16 +1,34 @@
 import { describe, it, expect, jest, beforeAll } from "@jest/globals"
 import { MY_OPEN_HOUSES_LIMIT } from "../constants/myOpenHouse.js"
 
-// Prisma is replaced with a fake, so these tests check the query that is sent and what is
+// Prisma is replaced with a fake, so these tests check the queries that are sent and what is
 // done with the rows, not the database. The repository is loaded AFTER the fake is
 // registered (see savedProperty.service.test.ts for why).
 const mockFindMany = jest.fn<(args: unknown) => Promise<unknown[]>>()
+const mockUserOpenHouseDeleteMany = jest.fn<(args: unknown) => Promise<{ count: number }>>()
+const mockOpenHouseDelete = jest.fn<(args: unknown) => Promise<unknown>>()
+const mockOpenHouseDeleteMany = jest.fn<(args: unknown) => Promise<unknown>>()
+const mockPropertyDelete = jest.fn<(args: unknown) => Promise<unknown>>()
+const mockPropertyDeleteMany = jest.fn<(args: unknown) => Promise<unknown>>()
 
 let myOpenHouseRepository: typeof import("../repositories/myOpenHouse.repository.js").myOpenHouseRepository
 
 beforeAll(async () => {
   jest.doMock("../lib/prisma.js", () => ({
-    prisma: { userOpenHouse: { findMany: (args: unknown) => mockFindMany(args) } },
+    prisma: {
+      userOpenHouse: {
+        findMany: (args: unknown) => mockFindMany(args),
+        deleteMany: (args: unknown) => mockUserOpenHouseDeleteMany(args),
+      },
+      openHouse: {
+        delete: (args: unknown) => mockOpenHouseDelete(args),
+        deleteMany: (args: unknown) => mockOpenHouseDeleteMany(args),
+      },
+      property: {
+        delete: (args: unknown) => mockPropertyDelete(args),
+        deleteMany: (args: unknown) => mockPropertyDeleteMany(args),
+      },
+    },
   }))
 
   const loaded = await import("../repositories/myOpenHouse.repository.js")
@@ -55,5 +73,37 @@ describe("myOpenHouseRepository.listForUser", () => {
     mockFindMany.mockResolvedValue([])
 
     expect(await myOpenHouseRepository.listForUser(7)).toEqual([])
+  })
+})
+
+describe("myOpenHouseRepository.deleteForUser", () => {
+  it("deletes only the entry with that id that belongs to the user", async () => {
+    mockUserOpenHouseDeleteMany.mockResolvedValue({ count: 1 })
+
+    await myOpenHouseRepository.deleteForUser(7, 3)
+
+    expect(mockUserOpenHouseDeleteMany).toHaveBeenCalledTimes(1)
+    expect(mockUserOpenHouseDeleteMany).toHaveBeenCalledWith({
+      where: { user_openHouse_id: 3, user_id: 7 },
+    })
+  })
+
+  it("returns how many rows were deleted", async () => {
+    mockUserOpenHouseDeleteMany.mockResolvedValueOnce({ count: 1 })
+    expect(await myOpenHouseRepository.deleteForUser(7, 3)).toBe(1)
+
+    mockUserOpenHouseDeleteMany.mockResolvedValueOnce({ count: 0 })
+    expect(await myOpenHouseRepository.deleteForUser(7, 3)).toBe(0)
+  })
+
+  it("never deletes the open house or the property the entry points to", async () => {
+    mockUserOpenHouseDeleteMany.mockResolvedValue({ count: 1 })
+
+    await myOpenHouseRepository.deleteForUser(7, 3)
+
+    expect(mockOpenHouseDelete).not.toHaveBeenCalled()
+    expect(mockOpenHouseDeleteMany).not.toHaveBeenCalled()
+    expect(mockPropertyDelete).not.toHaveBeenCalled()
+    expect(mockPropertyDeleteMany).not.toHaveBeenCalled()
   })
 })

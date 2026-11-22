@@ -9,6 +9,7 @@ import { retryOnConflict } from "../helper/retryOnConflict.js"
 import { startOfNextDay } from "../helper/timeZone.js"
 import {
   MY_OPEN_HOUSE_MAX_ATTEMPTS,
+  MY_OPEN_HOUSE_ERROR_ENTRY_NOT_FOUND,
   MY_OPEN_HOUSE_ERROR_NOT_FOUND,
   MY_OPEN_HOUSE_ERROR_NOT_AVAILABLE,
   MY_OPEN_HOUSE_GROUP,
@@ -99,6 +100,16 @@ export const myOpenHouseService = {
         expired: groups.expired.length,
       },
       myOpenHouses: groups,
+    }
+  },
+
+  remove: async (userId: number, myOpenHouseId: number) => {
+    const deleted = await myOpenHouseRepository.deleteForUser(userId, myOpenHouseId)
+
+    // "Does not exist" and "belongs to someone else" look the same on purpose, so ids of
+    // other users cannot be probed.
+    if (deleted === 0) {
+      throw new AppError(MY_OPEN_HOUSE_ERROR_ENTRY_NOT_FOUND, 404)
     }
   },
 }

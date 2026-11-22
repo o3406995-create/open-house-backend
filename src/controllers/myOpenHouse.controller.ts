@@ -1,7 +1,11 @@
 import type { Response, NextFunction } from "express"
 import type { AuthenticatedRequest } from "../middleware/auth.middleware.js"
 import { myOpenHouseService } from "../services/myOpenHouse.service.js"
-import { addMyOpenHouseSchema, listMyOpenHousesSchema } from "../validators/myOpenHouse.validator.js"
+import {
+  addMyOpenHouseSchema,
+  listMyOpenHousesSchema,
+  myOpenHouseIdParamSchema,
+} from "../validators/myOpenHouse.validator.js"
 import { VALIDATION_ERROR_MESSAGE } from "../constants/property.js"
 
 export const myOpenHouseController = {
@@ -42,6 +46,24 @@ export const myOpenHouseController = {
 
       const result = await myOpenHouseService.list(Number(req.userId), parsed.data.timeZone)
       return res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  remove: async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const parsed = myOpenHouseIdParamSchema.safeParse(req.params)
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: VALIDATION_ERROR_MESSAGE,
+          errors: parsed.error.flatten().fieldErrors,
+        })
+      }
+
+      await myOpenHouseService.remove(Number(req.userId), parsed.data.myOpenHouseId)
+      return res.status(204).send()
     } catch (err) {
       next(err)
     }

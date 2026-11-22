@@ -30,3 +30,6 @@ export const MY_OPEN_HOUSE_GROUP = {
 } as const
 
 export type MyOpenHouseGroup = (typeof MY_OPEN_HOUSE_GROUP)[keyof typeof MY_OPEN_HOUSE_GROUP]
+
+export const MY_OPEN_HOUSE_ERROR_INVALID_ENTRY_ID = "myOpenHouseId must be a positive integer"
+export const MY_OPEN_HOUSE_ERROR_ENTRY_NOT_FOUND = "My open house not found."
