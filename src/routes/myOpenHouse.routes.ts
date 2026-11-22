@@ -83,4 +83,38 @@ const router = Router()
 router.post("/", requireAuth, requireUser, myOpenHouseController.add)
 router.get("/", requireAuth, requireUser, myOpenHouseController.list)
 
+/**
+ * @swagger
+ * /api/my-open-houses/{myOpenHouseId}:
+ *   delete:
+ *     summary: Remove an open house from My Open Houses
+ *     description: >
+ *       USER accounts only. Removes one of the current user's entries. An entry that does not
+ *       exist, or that belongs to another user, returns 404. The stored open house and property
+ *       are kept because other users may have added them too.
+ *     tags:
+ *       - My Open Houses
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: myOpenHouseId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       204:
+ *         description: Removed
+ *       400:
+ *         description: Invalid id
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Only USER accounts have My Open Houses
+ *       404:
+ *         description: My open house not found
+ */
+router.delete("/:myOpenHouseId", requireAuth, requireUser, myOpenHouseController.remove)
+
 export default router

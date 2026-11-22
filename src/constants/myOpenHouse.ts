@@ -30,3 +30,10 @@ export const MY_OPEN_HOUSE_GROUP = {
 } as const
 
 export type MyOpenHouseGroup = (typeof MY_OPEN_HOUSE_GROUP)[keyof typeof MY_OPEN_HOUSE_GROUP]
+
+// The id of an entry in My Open Houses comes from the URL: plain digits, no leading zero
+export const MY_OPEN_HOUSE_ID_PATTERN = /^[1-9]\d*$/
+// The largest value an INT column can hold; anything bigger cannot be a valid id
+export const MY_OPEN_HOUSE_MAX_ID = 2147483647
+export const MY_OPEN_HOUSE_ERROR_INVALID_ENTRY_ID = "myOpenHouseId must be a positive integer"
+export const MY_OPEN_HOUSE_ERROR_ENTRY_NOT_FOUND = "My open house not found."
