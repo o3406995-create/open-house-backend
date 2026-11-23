@@ -1,7 +1,10 @@
 import { prisma } from "../lib/prisma.js"
 import type { PropertyRecordInput } from "../mappers/propertyRecordMapper.js"
 import type { OpenHouseRecordInput } from "../mappers/openHouseRecordMapper.js"
-import { MY_OPEN_HOUSES_LIMIT } from "../constants/myOpenHouse.js"
+import {
+  MY_OPEN_HOUSES_LIMIT,
+  USER_OPEN_HOUSE_STATUS_ATTENDED,
+} from "../constants/myOpenHouse.js"
 
 export const myOpenHouseRepository = {
   // One transaction: refresh the property and open house snapshots, then create the user's
@@ -66,6 +69,26 @@ export const myOpenHouseRepository = {
     })
 
     return rows.reverse()
+  },
+
+  // One of the user's own entries with its open house and the stored property snapshot;
+  // null when it does not exist or belongs to someone else
+  findForUser: (user_id: number, user_openHouse_id: number) => {
+    return prisma.userOpenHouse.findFirst({
+      where: { user_openHouse_id, user_id },
+      include: { openHouse: { include: { property: true } } },
+    })
+  },
+
+  // Marks the user's entry as attended. Returns how many rows were updated; it is 0 when the
+  // entry does not exist or belongs to someone else, and may also be 0 when it was already
+  // attended, depending on whether the driver counts matched or changed rows.
+  markAttended: async (user_id: number, user_openHouse_id: number) => {
+    const result = await prisma.userOpenHouse.updateMany({
+      where: { user_openHouse_id, user_id },
+      data: { status: USER_OPEN_HOUSE_STATUS_ATTENDED },
+    })
+    return result.count
   },
 
   // Removes the user's entry only. The OpenHouse row it points to is never touched: other
