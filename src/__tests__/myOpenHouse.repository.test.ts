@@ -107,14 +107,14 @@ describe("myOpenHouseRepository.findForUser", () => {
 })
 
 describe("myOpenHouseRepository.markAttended", () => {
-  it("updates only the entry with that id that belongs to the user, to ATTENDED", async () => {
+  it("updates only the entry with that id that belongs to the user and is not attended yet, to ATTENDED", async () => {
     mockUserOpenHouseUpdateMany.mockResolvedValue({ count: 1 })
 
     await myOpenHouseRepository.markAttended(7, 3)
 
     expect(mockUserOpenHouseUpdateMany).toHaveBeenCalledTimes(1)
     expect(mockUserOpenHouseUpdateMany).toHaveBeenCalledWith({
-      where: { user_openHouse_id: 3, user_id: 7 },
+      where: { user_openHouse_id: 3, user_id: 7, status: { not: "ATTENDED" } },
       data: { status: "ATTENDED" },
     })
   })

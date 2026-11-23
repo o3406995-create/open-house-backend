@@ -80,12 +80,17 @@ export const myOpenHouseRepository = {
     })
   },
 
-  // Marks the user's entry as attended. Returns how many rows were updated; it is 0 when the
-  // entry does not exist or belongs to someone else, and may also be 0 when it was already
-  // attended, depending on whether the driver counts matched or changed rows.
+  // Marks the user's entry as attended. Only an entry that is not attended yet matches, so the
+  // count is 1 for the request that made the change and 0 for anything else (the entry does
+  // not exist, belongs to someone else, or is already attended), whatever the driver does
+  // with a row that is matched but not changed.
   markAttended: async (user_id: number, user_openHouse_id: number) => {
     const result = await prisma.userOpenHouse.updateMany({
-      where: { user_openHouse_id, user_id },
+      where: {
+        user_openHouse_id,
+        user_id,
+        status: { not: USER_OPEN_HOUSE_STATUS_ATTENDED },
+      },
       data: { status: USER_OPEN_HOUSE_STATUS_ATTENDED },
     })
     return result.count
