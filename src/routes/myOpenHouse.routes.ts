@@ -117,4 +117,46 @@ router.get("/", requireAuth, requireUser, myOpenHouseController.list)
  */
 router.delete("/:myOpenHouseId", requireAuth, requireUser, myOpenHouseController.remove)
 
+/**
+ * @swagger
+ * /api/my-open-houses/{myOpenHouseId}/attended:
+ *   patch:
+ *     summary: Confirm that the user attended an open house
+ *     description: >
+ *       USER accounts only. Marks one of the current user's entries as attended. It is allowed
+ *       once the open house has started, also after it has finished; before that the answer is
+ *       409. Marking an entry that is already attended is not an error and returns it again.
+ *       An entry that does not exist, or that belongs to another user, returns 404.
+ *     tags:
+ *       - My Open Houses
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: myOpenHouseId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       200:
+ *         description: Returned as { myOpenHouse } with the entry as it is listed under attended
+ *       400:
+ *         description: Invalid id
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Only USER accounts have My Open Houses
+ *       404:
+ *         description: My open house not found
+ *       409:
+ *         description: The open house has not started yet
+ */
+router.patch(
+  "/:myOpenHouseId/attended",
+  requireAuth,
+  requireUser,
+  myOpenHouseController.markAttended,
+)
+
 export default router

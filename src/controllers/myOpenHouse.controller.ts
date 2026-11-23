@@ -68,4 +68,27 @@ export const myOpenHouseController = {
       next(err)
     }
   },
+
+  markAttended: async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const parsed = myOpenHouseIdParamSchema.safeParse(req.params)
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: VALIDATION_ERROR_MESSAGE,
+          errors: parsed.error.flatten().fieldErrors,
+        })
+      }
+
+      const myOpenHouse = await myOpenHouseService.markAttended(
+        Number(req.userId),
+        parsed.data.myOpenHouseId,
+      )
+
+      // 200 also when it was already marked: confirming twice is not an error
+      return res.status(200).json({ myOpenHouse })
+    } catch (err) {
+      next(err)
+    }
+  },
 }

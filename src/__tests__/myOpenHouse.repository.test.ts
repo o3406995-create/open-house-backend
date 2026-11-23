@@ -5,7 +5,11 @@ import { MY_OPEN_HOUSES_LIMIT } from "../constants/myOpenHouse.js"
 // done with the rows, not the database. The repository is loaded AFTER the fake is
 // registered (see savedProperty.service.test.ts for why).
 const mockFindMany = jest.fn<(args: unknown) => Promise<unknown[]>>()
+const mockFindFirst = jest.fn<(args: unknown) => Promise<unknown>>()
+const mockUserOpenHouseUpdateMany = jest.fn<(args: unknown) => Promise<{ count: number }>>()
 const mockUserOpenHouseDeleteMany = jest.fn<(args: unknown) => Promise<{ count: number }>>()
+const mockOpenHouseUpdate = jest.fn<(args: unknown) => Promise<unknown>>()
+const mockOpenHouseUpdateMany = jest.fn<(args: unknown) => Promise<unknown>>()
 const mockOpenHouseDelete = jest.fn<(args: unknown) => Promise<unknown>>()
 const mockOpenHouseDeleteMany = jest.fn<(args: unknown) => Promise<unknown>>()
 const mockPropertyDelete = jest.fn<(args: unknown) => Promise<unknown>>()
@@ -18,9 +22,13 @@ beforeAll(async () => {
     prisma: {
       userOpenHouse: {
         findMany: (args: unknown) => mockFindMany(args),
+        findFirst: (args: unknown) => mockFindFirst(args),
+        updateMany: (args: unknown) => mockUserOpenHouseUpdateMany(args),
         deleteMany: (args: unknown) => mockUserOpenHouseDeleteMany(args),
       },
       openHouse: {
+        update: (args: unknown) => mockOpenHouseUpdate(args),
+        updateMany: (args: unknown) => mockOpenHouseUpdateMany(args),
         delete: (args: unknown) => mockOpenHouseDelete(args),
         deleteMany: (args: unknown) => mockOpenHouseDeleteMany(args),
       },
@@ -73,6 +81,59 @@ describe("myOpenHouseRepository.listForUser", () => {
     mockFindMany.mockResolvedValue([])
 
     expect(await myOpenHouseRepository.listForUser(7)).toEqual([])
+  })
+})
+
+describe("myOpenHouseRepository.findForUser", () => {
+  it("only looks at the entry with that id that belongs to the user, with its open house and property", async () => {
+    mockFindFirst.mockResolvedValue(null)
+
+    await myOpenHouseRepository.findForUser(7, 3)
+
+    expect(mockFindFirst).toHaveBeenCalledTimes(1)
+    expect(mockFindFirst).toHaveBeenCalledWith({
+      where: { user_openHouse_id: 3, user_id: 7 },
+      include: { openHouse: { include: { property: true } } },
+    })
+  })
+
+  it("returns the row, or null when there is none", async () => {
+    mockFindFirst.mockResolvedValueOnce({ id: 3 })
+    expect(await myOpenHouseRepository.findForUser(7, 3)).toEqual({ id: 3 })
+
+    mockFindFirst.mockResolvedValueOnce(null)
+    expect(await myOpenHouseRepository.findForUser(7, 3)).toBeNull()
+  })
+})
+
+describe("myOpenHouseRepository.markAttended", () => {
+  it("updates only the entry with that id that belongs to the user and is not attended yet, to ATTENDED", async () => {
+    mockUserOpenHouseUpdateMany.mockResolvedValue({ count: 1 })
+
+    await myOpenHouseRepository.markAttended(7, 3)
+
+    expect(mockUserOpenHouseUpdateMany).toHaveBeenCalledTimes(1)
+    expect(mockUserOpenHouseUpdateMany).toHaveBeenCalledWith({
+      where: { user_openHouse_id: 3, user_id: 7, status: { not: "ATTENDED" } },
+      data: { status: "ATTENDED" },
+    })
+  })
+
+  it("returns how many rows were updated", async () => {
+    mockUserOpenHouseUpdateMany.mockResolvedValueOnce({ count: 1 })
+    expect(await myOpenHouseRepository.markAttended(7, 3)).toBe(1)
+
+    mockUserOpenHouseUpdateMany.mockResolvedValueOnce({ count: 0 })
+    expect(await myOpenHouseRepository.markAttended(7, 3)).toBe(0)
+  })
+
+  it("does not change the open house", async () => {
+    mockUserOpenHouseUpdateMany.mockResolvedValue({ count: 1 })
+
+    await myOpenHouseRepository.markAttended(7, 3)
+
+    expect(mockOpenHouseUpdate).not.toHaveBeenCalled()
+    expect(mockOpenHouseUpdateMany).not.toHaveBeenCalled()
   })
 })
 
