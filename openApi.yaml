@@ -209,6 +209,18 @@ components:
                 AVAILABLE: fetched from the data source just now. REMOVED: the data source no
                 longer has the listing (the stored snapshot is shown). UNKNOWN: it could not be
                 checked (the stored snapshot is shown).
+            note:
+              type: object
+              nullable: true
+              description: The private note of the user on this saved property, or null when there is none.
+              properties:
+                noteId:
+                  type: integer
+                content:
+                  type: string
+                updatedAt:
+                  type: string
+                  format: date-time
 
 paths:
   /api/auth/register:

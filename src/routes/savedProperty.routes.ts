@@ -70,7 +70,7 @@ const router = Router()
  *           default: 20
  *     responses:
  *       200:
- *         description: Saved properties, returned as { savedProperties, total, page, pageSize }
+ *         description: Saved properties, returned as { savedProperties, total, page, pageSize }. Each saved property has a note ({ noteId, content, updatedAt }), or null when it has none
  *       400:
  *         description: Invalid page or pageSize
  *       401:
