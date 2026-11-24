@@ -6,7 +6,7 @@ REST API for the Open House app: searching property listings, saving properties,
 
 1. Install the dependencies: `npm install`.
 2. Create a local MySQL database called `openhouse`.
-3. Create `env/local.env` (it is not committed) with two lines: `DATABASE_URL=mysql://<user>:<password>@127.0.0.1:3306/openhouse` and `JWT_SECRET=<a long random string>`. Leave the optional variables out rather than empty: an empty value counts as set, so an empty `PORT` makes the server listen on a random port and an empty `CORS_ORIGIN` allows no origin. `.env.example` lists them all. With `PROPERTY_DATA_SOURCE` unset the API serves the built-in mock listings, so no Domain credentials are needed.
+3. Copy the template: `cp .env.example env/local.env`. It holds working local defaults and placeholders: set `DATABASE_URL` to your local MySQL user and password and `JWT_SECRET` to a long random string. `env/local.env` is not committed. With `PROPERTY_DATA_SOURCE=mock` the API serves the built-in mock listings, so no Domain credentials are needed.
 4. Create the tables: `npx prisma migrate dev`.
 5. Start the API with reload: `npm run dev` (port 3000 unless `PORT` says otherwise).
 6. Optional, the first admin: put `ADMIN_SEED_EMAIL` and `ADMIN_SEED_PASSWORD` in `env/local.env` and run `npm run seed:admin`. Users register themselves; an admin creates agent accounts with `POST /api/admin/agents`.
@@ -25,14 +25,14 @@ The interactive API documentation is at `http://localhost:3000/api-docs`; the st
 
 ## Environment variables
 
-`.env.example` lists every variable without values. `APP_ENV` (default `local`) picks the file `env/<APP_ENV>.env`. The file is not read when `DATABASE_URL` is already set, so a host that supplies the variables itself needs no file.
+`.env.example` lists the variables with local defaults and placeholder values. `APP_ENV` (default `local`) picks the file `env/<APP_ENV>.env`. The file is not read when `DATABASE_URL` is already set, so a host that supplies the variables itself needs no file.
 
 | Variable | Required | Default | Used for |
 |---|---|---|---|
 | `DATABASE_URL` | yes | none | MySQL connection string |
 | `DATABASE_SSL` | no | off | Set to `true` when the database needs TLS (TiDB Cloud) |
 | `JWT_SECRET` | yes | none | Signs and checks the login token |
-| `CORS_ORIGIN` | no | a local development origin | The origin(s) allowed to call the API from a browser |
+| `CORS_ORIGIN` | no | `http://localhost:5173,http://localhost:5174` | The origin(s) allowed to call the API from a browser, comma separated |
 | `PORT` | no | 3000 | Port the server listens on |
 | `API_BASE_URL` | no | `http://localhost:<PORT>` | The server address shown in the API documentation |
 | `NODE_ENV` | no | none | `production` makes the login cookie `secure` |
@@ -43,13 +43,13 @@ The interactive API documentation is at `http://localhost:3000/api-docs`; the st
 | `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` | for `seed:admin` | none | The first admin account |
 | `ADMIN_SEED_NAME` | no | `Admin` | Name of that account |
 
-Never commit real values. `.env.example` has names only, and `env/dev.env`, `env/sit.env` and `env/uat.env` are committed with placeholder values only: put real values in a copy outside Git or in the host's settings, never in those files.
+Never commit real values. `.env.example` has local defaults and placeholders only, and `env/dev.env`, `env/sit.env` and `env/uat.env` are committed with placeholder values only: put real values in a copy outside Git or in the host's settings, never in those files.
 
 ## Property data: mock or Domain
 
 All listing data goes through a provider chosen by `PROPERTY_DATA_SOURCE`.
 
-- **mock** (the default): sample listings from `src/mock-data`, with open houses scheduled relative to today so there are always upcoming ones. Nothing external is called.
+- **mock** (the default): sample listings from `src/mock-data`, with open houses scheduled relative to today (some coming up, some already past). Nothing external is called.
 - **domain**: the Domain API. It needs `DOMAIN_CLIENT_ID` and `DOMAIN_CLIENT_SECRET`. An open house from Domain is identified as `<listing id>-<opening time in seconds>`, so its id stays the same when an earlier one has passed.
 
 Both providers return the same shapes, so nothing else depends on the choice. A saved property and an entry in My Open Houses also keep a snapshot of the listing in the database: My Open Houses answers from the snapshot, and the saved properties list checks the provider and falls back to the snapshot.
