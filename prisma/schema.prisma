@@ -49,16 +49,16 @@ enum LogAction {
 }
 
 model User {
-  user_id       Int       @id @default(autoincrement())
+  user_id       Int      @id @default(autoincrement())
   name          String
-  email         String    @unique
+  email         String   @unique
   password_hash String
   phone         String?
-  role          Role      @default(USER)
-  status        String    @default("ACTIVE")
-  is_deleted    Boolean   @default(false)
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  role          Role     @default(USER)
+  status        String   @default("ACTIVE")
+  is_deleted    Boolean  @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
   deleted_at    DateTime?
 
   agentProfile    AgentProfile?
@@ -67,7 +67,6 @@ model User {
   notes           Note[]
   notifications   Notification[]
   activityLogs    ActivityLog[]
-
   @@index([is_deleted, role])
 }
 
