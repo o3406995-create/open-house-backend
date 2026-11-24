@@ -12,6 +12,7 @@ import adminRoutes from "./routes/admin.routes.js"
 import { DEFAULT_CORS_ORIGIN, DEFAULT_PORT } from "./constants/server.js"
 import savedPropertyRoutes from "./routes/savedProperty.routes.js"
 import myOpenHouseRoutes from "./routes/myOpenHouse.routes.js"
+import noteRoutes from "./routes/note.routes.js"
 
 const app = express()
 const PORT = Number(process.env.PORT ?? DEFAULT_PORT)
@@ -46,6 +47,8 @@ app.use("/api/properties", propertyRoutes)
 app.use("/api/saved-properties", savedPropertyRoutes)
 
 app.use("/api/my-open-houses", myOpenHouseRoutes)
+
+app.use("/api/notes", noteRoutes)
 
 app.use("/api/admin", adminRoutes)
 

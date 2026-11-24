@@ -141,6 +141,7 @@ model SavedProperty {
 
   user     User     @relation(fields: [user_id], references: [user_id])
   property Property @relation(fields: [property_id], references: [property_id])
+  note     Note?
 
   @@unique([user_id, property_id])
 }
@@ -186,15 +187,21 @@ model AgentTrackedProperty {
 }
 
 model Note {
-  note_id     Int      @id @default(autoincrement())
-  property_id Int
-  user_id     Int
-  content     String   @db.Text
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  note_id           Int      @id @default(autoincrement())
+  property_id       Int
+  user_id           Int
+  // A note belongs to exactly one of these two (the other is null) and each of them has at
+  // most one note. The note is removed together with the row it belongs to.
+  saved_property_id Int?     @unique
+  user_openhouse_id Int?     @unique
+  content           String   @db.Text
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
 
-  property Property @relation(fields: [property_id], references: [property_id])
-  user     User     @relation(fields: [user_id], references: [user_id])
+  property      Property       @relation(fields: [property_id], references: [property_id])
+  user          User           @relation(fields: [user_id], references: [user_id])
+  savedProperty SavedProperty? @relation(fields: [saved_property_id], references: [saved_property_id], onDelete: Cascade)
+  userOpenHouse UserOpenHouse? @relation(fields: [user_openhouse_id], references: [user_openHouse_id], onDelete: Cascade)
 }
 
 model UserOpenHouse {
@@ -206,6 +213,7 @@ model UserOpenHouse {
 
   user      User      @relation(fields: [user_id], references: [user_id])
   openHouse OpenHouse @relation(fields: [openhouse_id], references: [openhouse_id])
+  note      Note?
 
   @@unique([user_id, openhouse_id])
 }
