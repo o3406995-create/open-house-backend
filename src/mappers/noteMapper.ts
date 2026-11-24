@@ -17,3 +17,17 @@ export function toNoteDTO(row: NoteRow) {
     updatedAt: row.updated_at,
   }
 }
+
+// A note as it appears inside a list: the saved properties and My Open Houses lists carry one
+// per item, or null when the item has none
+export interface NoteSummaryRow {
+  note_id: number
+  content: string
+  updated_at: Date
+}
+
+export function noteSummaryOf(row: NoteSummaryRow | null | undefined) {
+  if (!row) return null
+
+  return { noteId: row.note_id, content: row.content, updatedAt: row.updated_at }
+}

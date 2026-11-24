@@ -3,6 +3,7 @@ import { propertyService } from "./property.service.js"
 import { AppError } from "../lib/AppError.js"
 import { toPropertyRecord, type PropertyRecordInput } from "../mappers/propertyRecordMapper.js"
 import { snapshotToSummary } from "../mappers/savedSnapshotMapper.js"
+import { noteSummaryOf } from "../mappers/noteMapper.js"
 import { toSummary } from "../helper/propertySummary.js"
 import { upcomingOpenHouses } from "../helper/openHouses.js"
 import { mapWithConcurrency } from "../helper/concurrency.js"
@@ -64,6 +65,7 @@ async function resolveItem(record: SavedRecord, activeSource: PropertySource) {
     savedPropertyId: record.saved_property_id,
     savedAt: record.saved_at,
     listingStatus,
+    note: noteSummaryOf(record.note),
     property: { ...property, openHouses: upcomingOpenHouses(property.openHouses) },
   }
 }

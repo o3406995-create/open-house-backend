@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma.js"
 import type { PropertyRecordInput } from "../mappers/propertyRecordMapper.js"
 import type { OpenHouseRecordInput } from "../mappers/openHouseRecordMapper.js"
+import { NOTE_SUMMARY_SELECT } from "../constants/note.js"
 import {
   MY_OPEN_HOUSES_LIMIT,
   USER_OPEN_HOUSE_STATUS_ATTENDED,
@@ -63,7 +64,10 @@ export const myOpenHouseRepository = {
   listForUser: async (user_id: number) => {
     const rows = await prisma.userOpenHouse.findMany({
       where: { user_id },
-      include: { openHouse: { include: { property: true } } },
+      include: {
+        openHouse: { include: { property: true } },
+        note: { select: NOTE_SUMMARY_SELECT },
+      },
       orderBy: [{ openHouse: { start_datetime: "desc" } }, { user_openHouse_id: "desc" }],
       take: MY_OPEN_HOUSES_LIMIT,
     })
@@ -76,7 +80,10 @@ export const myOpenHouseRepository = {
   findForUser: (user_id: number, user_openHouse_id: number) => {
     return prisma.userOpenHouse.findFirst({
       where: { user_openHouse_id, user_id },
-      include: { openHouse: { include: { property: true } } },
+      include: {
+        openHouse: { include: { property: true } },
+        note: { select: NOTE_SUMMARY_SELECT },
+      },
     })
   },
 
