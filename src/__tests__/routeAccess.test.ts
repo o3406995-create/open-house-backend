@@ -42,6 +42,7 @@ const ROUTES: RouteCase[] = [
   { method: "post", path: "/api/notes", name: "note.create" },
   { method: "put", path: "/api/notes/3", name: "note.update" },
   { method: "delete", path: "/api/notes/3", name: "note.remove" },
+  { method: "get", path: "/api/notifications", name: "notification.list" },
 ]
 
 const SAMPLE: RouteCase = { method: "post", path: "/api/notes", name: "note.create" }
@@ -78,10 +79,14 @@ beforeAll(async () => {
       remove: handler("note.remove"),
     },
   }))
+  jest.doMock("../controllers/notification.controller.js", () => ({
+    notificationController: { list: handler("notification.list") },
+  }))
 
   const savedProperty = await import("../routes/savedProperty.routes.js")
   const myOpenHouse = await import("../routes/myOpenHouse.routes.js")
   const note = await import("../routes/note.routes.js")
+  const notification = await import("../routes/notification.routes.js")
 
   app = express()
   app.use(express.json())
@@ -89,6 +94,7 @@ beforeAll(async () => {
   app.use("/api/saved-properties", savedProperty.default)
   app.use("/api/my-open-houses", myOpenHouse.default)
   app.use("/api/notes", note.default)
+  app.use("/api/notifications", notification.default)
   app.use(errorHandler)
 })
 

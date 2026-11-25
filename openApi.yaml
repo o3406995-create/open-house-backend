@@ -922,3 +922,90 @@ paths:
           description: Only USER accounts have notes
         "404":
           description: Note not found
+
+  /api/notifications:
+    get:
+      summary: List the notifications of the current user
+      description: >
+        USER accounts only, newest first. Each notification names the property and the open
+        house it is about, taken from the snapshot stored in the database (no data source is
+        called). total and unreadCount only count notifications that can be matched to a
+        listing, and unreadCount covers all pages.
+      tags:
+        - Notifications
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        notificationId:
+                          type: integer
+                        type:
+                          type: string
+                          enum: [NEW_OPEN_HOUSE, PRICE_CHANGE, STATUS_CHANGE]
+                        message:
+                          type: string
+                        isRead:
+                          type: boolean
+                        createdAt:
+                          type: string
+                          format: date-time
+                        openHouse:
+                          type: object
+                          properties:
+                            externalId:
+                              type: string
+                            startDatetime:
+                              type: string
+                              format: date-time
+                            endDatetime:
+                              type: string
+                              format: date-time
+                            status:
+                              type: string
+                              enum: [SCHEDULED, CANCELLED, COMPLETED]
+                        property:
+                          type: object
+                          description: The stored snapshot of the property, in the shape of a search result (it has no open houses of its own)
+                  total:
+                    type: integer
+                  unreadCount:
+                    type: integer
+                  page:
+                    type: integer
+                  pageSize:
+                    type: integer
+        "400":
+          description: Invalid page or pageSize
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Only USER accounts have notifications
