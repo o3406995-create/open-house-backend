@@ -107,8 +107,8 @@ export const myOpenHouseRepository = {
   // users may have added it too. Returns how many rows were deleted (0 when it does not
   // exist or belongs to someone else).
   // The note of the entry (if there is one) is removed with it by the foreign key (ON DELETE
-  // CASCADE). Notifications (#50) are not tied to an entry yet; when they are, decide what removing
-  // one does to them, and whether an attended entry may be removed at all.
+  // CASCADE). Notifications belong to a property and an open house, not to an entry, so removing
+  // an entry leaves them alone. Whether an attended entry may be removed at all is still open.
   deleteForUser: async (user_id: number, user_openHouse_id: number) => {
     const result = await prisma.userOpenHouse.deleteMany({
       where: { user_openHouse_id, user_id },
