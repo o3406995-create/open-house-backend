@@ -989,8 +989,7 @@ paths:
                               type: string
                               enum: [SCHEDULED, CANCELLED, COMPLETED]
                         property:
-                          type: object
-                          description: The stored snapshot of the property, in the shape of a search result (it has no open houses of its own)
+                          $ref: "#/components/schemas/PropertySummary"
                   total:
                     type: integer
                   unreadCount:
