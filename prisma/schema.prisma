@@ -120,6 +120,9 @@ model Property {
   description   String?        @db.Text
   listing_url   String?        @db.VarChar(2048)
   status        PropertyStatus @default(DRAFT)
+  // When the open houses of this property were last recorded; null until the first time. That
+  // first recording is the baseline and sends no notification.
+  open_houses_seen_at DateTime?
   created_at    DateTime       @default(now())
   updated_at    DateTime       @updatedAt
 
