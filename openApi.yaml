@@ -993,36 +993,7 @@ paths:
                   notifications:
                     type: array
                     items:
-                      type: object
-                      properties:
-                        notificationId:
-                          type: integer
-                        type:
-                          type: string
-                          enum: [NEW_OPEN_HOUSE, PRICE_CHANGE, STATUS_CHANGE]
-                        message:
-                          type: string
-                        isRead:
-                          type: boolean
-                        createdAt:
-                          type: string
-                          format: date-time
-                        openHouse:
-                          type: object
-                          properties:
-                            externalId:
-                              type: string
-                            startDatetime:
-                              type: string
-                              format: date-time
-                            endDatetime:
-                              type: string
-                              format: date-time
-                            status:
-                              type: string
-                              enum: [SCHEDULED, CANCELLED, COMPLETED]
-                        property:
-                          $ref: "#/components/schemas/PropertySummary"
+                      $ref: "#/components/schemas/NotificationItem"
                   total:
                     type: integer
                   unreadCount:
