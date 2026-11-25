@@ -72,7 +72,7 @@ const router = Router()
  *         example: Australia/Brisbane
  *     responses:
  *       200:
- *         description: Returned as { timeZone, counts, myOpenHouses } with the groups today, upcoming, attended and expired
+ *         description: Returned as { timeZone, counts, myOpenHouses } with the groups today, upcoming, attended and expired. Each entry has a note ({ noteId, content, updatedAt }), or null when it has none
  *       400:
  *         description: Unknown time zone
  *       401:
@@ -140,7 +140,7 @@ router.delete("/:myOpenHouseId", requireAuth, requireUser, myOpenHouseController
  *           minimum: 1
  *     responses:
  *       200:
- *         description: Returned as { myOpenHouse } with the entry as it is listed under attended
+ *         description: Returned as { myOpenHouse } with the entry as it is listed under attended, including its note
  *       400:
  *         description: Invalid id
  *       401:

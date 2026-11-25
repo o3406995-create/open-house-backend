@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js"
 import type { PropertyRecordInput } from "../mappers/propertyRecordMapper.js"
+import { NOTE_SUMMARY_SELECT } from "../constants/note.js"
 
 export const savedPropertyRepository = {
   // One transaction: refresh the property snapshot, then create the saved-property row
@@ -46,7 +47,7 @@ export const savedPropertyRepository = {
     const [records, total] = await prisma.$transaction([
       prisma.savedProperty.findMany({
         where,
-        include: { property: true },
+        include: { property: true, note: { select: NOTE_SUMMARY_SELECT } },
         orderBy: [{ saved_at: "desc" }, { saved_property_id: "desc" }],
         skip: (page - 1) * pageSize,
         take: pageSize,

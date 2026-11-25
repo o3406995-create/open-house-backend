@@ -1,5 +1,6 @@
 import type { OpenHouseDTO } from "../types/property.js"
 import { snapshotToSummary, type PropertySnapshot } from "./savedSnapshotMapper.js"
+import { noteSummaryOf, type NoteSummaryRow } from "./noteMapper.js"
 import {
   MY_OPEN_HOUSE_GROUP,
   USER_OPEN_HOUSE_STATUS_ATTENDED,
@@ -12,6 +13,8 @@ export interface MyOpenHouseRow {
   user_openHouse_id: number
   created_at: Date
   status: string
+  // The note of the entry, when the query loaded it
+  note?: NoteSummaryRow | null | undefined
   openHouse: {
     external_id: string | null
     start_datetime: Date
@@ -62,6 +65,7 @@ export function toMyOpenHouseItem(row: MyOpenHouseRow, group: MyOpenHouseGroup) 
       status: row.openHouse.status,
     },
     property,
+    note: noteSummaryOf(row.note),
   }
 }
 

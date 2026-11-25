@@ -7,3 +7,6 @@ export const NOTE_ERROR_INVALID_ID = "noteId must be a positive integer"
 export const NOTE_ERROR_NOT_FOUND = "Note not found."
 export const NOTE_ERROR_TARGET_NOT_FOUND = "Saved property or open house not found."
 export const NOTE_ERROR_ALREADY_EXISTS = "This item already has a note. Update it instead."
+
+// The part of a note that the lists carry: enough to show it and to change it
+export const NOTE_SUMMARY_SELECT = { note_id: true, content: true, updated_at: true } as const

@@ -209,6 +209,18 @@ components:
                 AVAILABLE: fetched from the data source just now. REMOVED: the data source no
                 longer has the listing (the stored snapshot is shown). UNKNOWN: it could not be
                 checked (the stored snapshot is shown).
+            note:
+              type: object
+              nullable: true
+              description: The private note of the user on this saved property, or null when there is none.
+              properties:
+                noteId:
+                  type: integer
+                content:
+                  type: string
+                updatedAt:
+                  type: string
+                  format: date-time
 
 paths:
   /api/auth/register:
@@ -702,7 +714,7 @@ paths:
           example: Australia/Brisbane
       responses:
         "200":
-          description: Returned as { timeZone, counts, myOpenHouses } with the groups today, upcoming, attended and expired
+          description: Returned as { timeZone, counts, myOpenHouses } with the groups today, upcoming, attended and expired. Each entry has a note ({ noteId, content, updatedAt }), or null when it has none
         "400":
           description: Unknown time zone
           content:
@@ -771,7 +783,7 @@ paths:
           example: 1
       responses:
         "200":
-          description: Returned as { myOpenHouse } with the entry as it is listed under attended
+          description: Returned as { myOpenHouse } with the entry as it is listed under attended, including its note
         "400":
           description: Invalid id
           content:

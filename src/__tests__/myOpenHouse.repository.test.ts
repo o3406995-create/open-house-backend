@@ -52,7 +52,7 @@ describe("myOpenHouseRepository.listForUser", () => {
     expect(mockFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { user_id: 7 },
-        include: { openHouse: { include: { property: true } } },
+        include: { openHouse: { include: { property: true } }, note: { select: { note_id: true, content: true, updated_at: true } } },
       }),
     )
   })
@@ -93,7 +93,7 @@ describe("myOpenHouseRepository.findForUser", () => {
     expect(mockFindFirst).toHaveBeenCalledTimes(1)
     expect(mockFindFirst).toHaveBeenCalledWith({
       where: { user_openHouse_id: 3, user_id: 7 },
-      include: { openHouse: { include: { property: true } } },
+      include: { openHouse: { include: { property: true } }, note: { select: { note_id: true, content: true, updated_at: true } } },
     })
   })
 

@@ -195,3 +195,27 @@ describe("myOpenHouseService.markAttended", () => {
     await expect(myOpenHouseService.markAttended(7, 3, NOW)).rejects.toThrow("database is down")
   })
 })
+
+describe("myOpenHouseService.markAttended: the note of the entry", () => {
+  it("the attended entry carries its note", async () => {
+    const updated = new Date("2026-11-21T03:00:00.000Z")
+    mockFindForUser.mockResolvedValue({
+      ...RUNNING,
+      note: { note_id: 5, content: "Ask about parking", updated_at: updated },
+    })
+    mockMarkAttended.mockResolvedValue(1)
+
+    const item = await myOpenHouseService.markAttended(7, 3, NOW)
+
+    expect(item.note).toEqual({ noteId: 5, content: "Ask about parking", updatedAt: updated })
+  })
+
+  it("the attended entry has a null note when there is none", async () => {
+    mockFindForUser.mockResolvedValue(RUNNING)
+    mockMarkAttended.mockResolvedValue(1)
+
+    const item = await myOpenHouseService.markAttended(7, 3, NOW)
+
+    expect(item.note).toBeNull()
+  })
+})
