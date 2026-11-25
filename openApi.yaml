@@ -222,6 +222,39 @@ components:
                   type: string
                   format: date-time
 
+    NotificationItem:
+      type: object
+      description: A notification as the list returns it
+      properties:
+        notificationId:
+          type: integer
+        type:
+          type: string
+          enum: [NEW_OPEN_HOUSE, PRICE_CHANGE, STATUS_CHANGE]
+        message:
+          type: string
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        openHouse:
+          type: object
+          properties:
+            externalId:
+              type: string
+            startDatetime:
+              type: string
+              format: date-time
+            endDatetime:
+              type: string
+              format: date-time
+            status:
+              type: string
+              enum: [SCHEDULED, CANCELLED, COMPLETED]
+        property:
+          $ref: "#/components/schemas/PropertySummary"
+
 paths:
   /api/auth/register:
     post:
@@ -960,36 +993,7 @@ paths:
                   notifications:
                     type: array
                     items:
-                      type: object
-                      properties:
-                        notificationId:
-                          type: integer
-                        type:
-                          type: string
-                          enum: [NEW_OPEN_HOUSE, PRICE_CHANGE, STATUS_CHANGE]
-                        message:
-                          type: string
-                        isRead:
-                          type: boolean
-                        createdAt:
-                          type: string
-                          format: date-time
-                        openHouse:
-                          type: object
-                          properties:
-                            externalId:
-                              type: string
-                            startDatetime:
-                              type: string
-                              format: date-time
-                            endDatetime:
-                              type: string
-                              format: date-time
-                            status:
-                              type: string
-                              enum: [SCHEDULED, CANCELLED, COMPLETED]
-                        property:
-                          $ref: "#/components/schemas/PropertySummary"
+                      $ref: "#/components/schemas/NotificationItem"
                   total:
                     type: integer
                   unreadCount:
@@ -1008,3 +1012,44 @@ paths:
           description: Not authenticated
         "403":
           description: Only USER accounts have notifications
+  /api/notifications/{notificationId}/read:
+    patch:
+      summary: Mark one of the notifications of the current user as read
+      description: >
+        USER accounts only. Marking a notification that is read already is not an error, the
+        answer is the same. A notification that does not exist, that belongs to another user, or
+        that cannot be shown in the list is a 404.
+      tags:
+        - Notifications
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: notificationId
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        "200":
+          description: The notification as it is listed, with isRead true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notification:
+                    $ref: "#/components/schemas/NotificationItem"
+        "400":
+          description: Invalid id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Only USER accounts have notifications
+        "404":
+          description: Notification not found

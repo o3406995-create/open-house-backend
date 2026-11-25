@@ -43,6 +43,7 @@ const ROUTES: RouteCase[] = [
   { method: "put", path: "/api/notes/3", name: "note.update" },
   { method: "delete", path: "/api/notes/3", name: "note.remove" },
   { method: "get", path: "/api/notifications", name: "notification.list" },
+  { method: "patch", path: "/api/notifications/3/read", name: "notification.markRead" },
 ]
 
 const SAMPLE: RouteCase = { method: "post", path: "/api/notes", name: "note.create" }
@@ -80,7 +81,10 @@ beforeAll(async () => {
     },
   }))
   jest.doMock("../controllers/notification.controller.js", () => ({
-    notificationController: { list: handler("notification.list") },
+    notificationController: {
+      list: handler("notification.list"),
+      markRead: handler("notification.markRead"),
+    },
   }))
 
   const savedProperty = await import("../routes/savedProperty.routes.js")

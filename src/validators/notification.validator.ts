@@ -1,7 +1,9 @@
 import { z } from "zod"
+import { positiveIntIdSchema } from "./positiveIntId.js"
 import {
   NOTIFICATION_DEFAULT_PAGE,
   NOTIFICATION_DEFAULT_PAGE_SIZE,
+  NOTIFICATION_ERROR_ID,
   NOTIFICATION_ERROR_PAGE,
   NOTIFICATION_ERROR_PAGE_SIZE,
   NOTIFICATION_MAX_PAGE_SIZE,
@@ -22,3 +24,7 @@ export const listNotificationsSchema = z.object({
 })
 
 export type ListNotificationsInput = z.infer<typeof listNotificationsSchema>
+
+export const notificationIdParamSchema = z.object({
+  notificationId: positiveIntIdSchema(NOTIFICATION_ERROR_ID),
+})
