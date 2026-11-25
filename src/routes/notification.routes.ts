@@ -45,4 +45,38 @@ const router = Router()
  */
 router.get("/", requireAuth, requireUser, notificationController.list)
 
+/**
+ * @swagger
+ * /api/notifications/{notificationId}/read:
+ *   patch:
+ *     summary: Mark one of the notifications of the current user as read
+ *     description: >
+ *       USER accounts only. Marking a notification that is read already is not an error, the
+ *       answer is the same. A notification that does not exist, that belongs to another user, or
+ *       that cannot be shown in the list is a 404.
+ *     tags:
+ *       - Notifications
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: notificationId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       200:
+ *         description: Returned as { notification }, the notification as it is listed, with isRead true
+ *       400:
+ *         description: Invalid id
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Only USER accounts have notifications
+ *       404:
+ *         description: Notification not found
+ */
+router.patch("/:notificationId/read", requireAuth, requireUser, notificationController.markRead)
+
 export default router
