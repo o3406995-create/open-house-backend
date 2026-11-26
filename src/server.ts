@@ -14,6 +14,7 @@ import savedPropertyRoutes from "./routes/savedProperty.routes.js"
 import myOpenHouseRoutes from "./routes/myOpenHouse.routes.js"
 import noteRoutes from "./routes/note.routes.js"
 import notificationRoutes from "./routes/notification.routes.js"
+import internalJobsRoutes from "./routes/internalJobs.routes.js"
 
 const app = express()
 const PORT = Number(process.env.PORT ?? DEFAULT_PORT)
@@ -52,6 +53,8 @@ app.use("/api/my-open-houses", myOpenHouseRoutes)
 app.use("/api/notes", noteRoutes)
 
 app.use("/api/notifications", notificationRoutes)
+
+app.use("/api/internal/jobs", internalJobsRoutes)
 
 app.use("/api/admin", adminRoutes)
 
