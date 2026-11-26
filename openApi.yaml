@@ -28,6 +28,19 @@ components:
         answers 404.
 
   schemas:
+    ReminderRun:
+      type: object
+      description: What one reminder did in one run of the job
+      properties:
+        candidates:
+          type: integer
+          description: Entries of My Open Houses that were looked at
+        due:
+          type: integer
+          description: Of those, the ones it is time to remind of on the clock of the user
+        created:
+          type: integer
+          description: Reminders that were written (fewer than due when some existed already)
     User:
       type: object
       properties:
@@ -243,7 +256,7 @@ components:
           type: integer
         type:
           type: string
-          enum: [NEW_OPEN_HOUSE, PRICE_CHANGE, STATUS_CHANGE, OPEN_HOUSE_REMINDER]
+          enum: [NEW_OPEN_HOUSE, PRICE_CHANGE, STATUS_CHANGE, OPEN_HOUSE_REMINDER, OPEN_HOUSE_TODAY]
         message:
           type: string
         isRead:
@@ -1105,31 +1118,30 @@ paths:
 
   /api/internal/jobs/schedule-reminders:
     post:
-      summary: Write the reminders for the open houses that start tomorrow (scheduler only)
+      summary: Write the reminders for the open houses of tomorrow and of today (scheduler only)
       description: >
         Called by a scheduler every hour, not by a user. It needs the secret in the x-job-secret
         header. Without a JOB_SECRET on the server (or with one shorter than 16 characters) the path
-        answers 404. For every user whose clock is past 18:00 it writes one OPEN_HOUSE_REMINDER for
-        each open house they added that starts tomorrow on their own clock (the time zone they
-        reported, or Australia/Brisbane). Running it again writes nothing twice.
+        answers 404. On the clock of each user (the time zone they reported, or Australia/Brisbane)
+        it writes one OPEN_HOUSE_REMINDER for every open house they added that starts tomorrow, once
+        it is 18:00 or later, and one OPEN_HOUSE_TODAY for every open house they added that starts
+        later the same day, once it is 06:00 or later. Running it again writes nothing twice.
       tags:
         - Internal
       security:
         - jobSecret: []
       responses:
         "200":
-          description: How many entries were looked at, how many were due and how many reminders were written
+          description: The result of the reminder for tomorrow and of the reminder for today
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  candidates:
-                    type: integer
-                  due:
-                    type: integer
-                  created:
-                    type: integer
+                  evening:
+                    $ref: "#/components/schemas/ReminderRun"
+                  morning:
+                    $ref: "#/components/schemas/ReminderRun"
         "401":
           description: Wrong or missing secret
         "404":

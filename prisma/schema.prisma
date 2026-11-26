@@ -42,6 +42,7 @@ enum NotificationType {
   PRICE_CHANGE
   STATUS_CHANGE
   OPEN_HOUSE_REMINDER
+  OPEN_HOUSE_TODAY
 }
 
 enum LogAction {

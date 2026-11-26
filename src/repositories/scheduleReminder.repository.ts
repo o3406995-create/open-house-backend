@@ -5,6 +5,7 @@ import {
   OPEN_HOUSE_REMINDER_TYPE,
   REMINDER_ROLE,
   UPCOMING_ENTRY_STATUS,
+  type ReminderType,
 } from "../constants/openHouseNotification.js"
 
 export interface NewReminderRow {
@@ -47,13 +48,14 @@ export const scheduleReminderRepository = {
 
   // Writes the reminders in batches. One that exists already is skipped (the unique index on user,
   // open house and type), so the job can run as often as it likes. Returns how many were written.
-  createReminders: async (rows: NewReminderRow[]) => {
+  // The type is the evening reminder unless another one is asked for
+  createReminders: async (rows: NewReminderRow[], type: ReminderType = OPEN_HOUSE_REMINDER_TYPE) => {
     let created = 0
 
     for (let start = 0; start < rows.length; start += NOTIFICATION_BATCH_SIZE) {
       const batch = rows.slice(start, start + NOTIFICATION_BATCH_SIZE)
       const result = await prisma.notification.createMany({
-        data: batch.map((row) => ({ ...row, type: OPEN_HOUSE_REMINDER_TYPE })),
+        data: batch.map((row) => ({ ...row, type })),
         skipDuplicates: true,
       })
       created += result.count
