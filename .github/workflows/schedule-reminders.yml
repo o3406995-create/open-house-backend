@@ -1,0 +1,37 @@
+name: Schedule reminders
+
+# Every hour: the job writes the reminders for the users whose clock is past 18:00. It is safe to run
+# as often as needed, a reminder is never written twice. Scheduled runs only happen on the default
+# branch, and can start a few minutes late.
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+# Nothing here uses the token of the workflow, so it gets none
+permissions: {}
+
+# A run can take minutes (the server may be asleep): the next one waits instead of overlapping
+concurrency:
+  group: schedule-reminders
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call the job
+        env:
+          JOB_BASE_URL: ${{ secrets.JOB_BASE_URL }}
+          JOB_SECRET: ${{ secrets.JOB_SECRET }}
+        run: |
+          set -euo pipefail
+          test -n "$JOB_BASE_URL" || { echo "The secret JOB_BASE_URL is not set"; exit 1; }
+          test -n "$JOB_SECRET" || { echo "The secret JOB_SECRET is not set"; exit 1; }
+          # The server may be asleep (free hosting): the first answer can take a minute
+          curl --fail-with-body --silent --show-error \
+            --max-time 120 --retry 3 --retry-delay 20 --retry-all-errors \
+            -X POST "$JOB_BASE_URL/api/internal/jobs/schedule-reminders" \
+            -H "x-job-secret: $JOB_SECRET"
+          echo

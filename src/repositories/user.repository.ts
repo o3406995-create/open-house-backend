@@ -41,6 +41,12 @@ export const userRepository = {
     return prisma.user.findFirst({ where: { user_id, ...NOT_DELETED } })
   },
 
+  // Stores the IANA time zone the browser reported. A deleted account is left alone, like in every
+  // business query on User. It is not asked whether a row changed: the same zone again changes nothing.
+  setTimeZone: async (user_id: number, time_zone: string): Promise<void> => {
+    await prisma.user.updateMany({ where: { user_id, ...NOT_DELETED }, data: { time_zone } })
+  },
+
   create: (data: {
     name: string
     email: string

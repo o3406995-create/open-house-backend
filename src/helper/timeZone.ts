@@ -1,7 +1,12 @@
 const FORMAT_LOCALE = "en-US"
 const MILLISECONDS_PER_SECOND = 1000
 
+// Intl also accepts an offset such as +10:00, which is not a time zone name: it knows nothing of daylight saving
+const OFFSET_PATTERN = /^[+-]/
+
 export function isValidTimeZone(timeZone: string): boolean {
+  if (OFFSET_PATTERN.test(timeZone)) return false
+
   try {
     // An unknown zone makes the constructor throw a RangeError
     new Intl.DateTimeFormat(FORMAT_LOCALE, { timeZone })
@@ -9,6 +14,11 @@ export function isValidTimeZone(timeZone: string): boolean {
   } catch {
     return false
   }
+}
+
+// The name the runtime uses for a zone that isValidTimeZone accepted (the letter case is fixed)
+export function canonicalTimeZone(timeZone: string): string {
+  return new Intl.DateTimeFormat(FORMAT_LOCALE, { timeZone }).resolvedOptions().timeZone
 }
 
 interface WallClock {
@@ -74,4 +84,9 @@ export function startOfNextDay(now: Date, timeZone: string): Date {
   // in between, so it is applied twice
   const firstGuess = midnightAsUtc - offsetMs(new Date(midnightAsUtc), timeZone)
   return new Date(midnightAsUtc - offsetMs(new Date(firstGuess), timeZone))
+}
+
+// The hour (0 to 23) on the wall clock of a time zone at one instant
+export function localHour(instant: Date, timeZone: string): number {
+  return wallClock(instant, timeZone).hour
 }

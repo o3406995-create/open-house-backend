@@ -18,6 +18,14 @@ components:
         /api/auth/login or /api/auth/register. Browser clients send this
         cookie automatically on subsequent requests; it cannot be entered
         manually in this Swagger UI since it is HttpOnly.
+    jobSecret:
+      type: apiKey
+      in: header
+      name: x-job-secret
+      description: >
+        The shared secret for the jobs that a scheduler calls (/api/internal/jobs/...), the value of
+        JOB_SECRET on the server. A server without it, or with one shorter than 16 characters,
+        answers 404.
 
   schemas:
     User:
@@ -50,6 +58,11 @@ components:
         updated_at:
           type: string
           format: date-time
+        time_zone:
+          type: string
+          nullable: true
+          example: Australia/Sydney
+          description: The IANA time zone the browser last reported, null until it has (PUT /api/users/me/time-zone)
 
     ValidationError:
       type: object
@@ -230,7 +243,7 @@ components:
           type: integer
         type:
           type: string
-          enum: [NEW_OPEN_HOUSE, PRICE_CHANGE, STATUS_CHANGE]
+          enum: [NEW_OPEN_HOUSE, PRICE_CHANGE, STATUS_CHANGE, OPEN_HOUSE_REMINDER]
         message:
           type: string
         isRead:
@@ -402,6 +415,42 @@ paths:
           description: Not authenticated, session expired, or account deleted
         "404":
           description: User not found
+
+  /api/users/me/time-zone:
+    put:
+      summary: Store the time zone of the current user
+      description: >
+        Any logged-in account. The browser sends its own IANA time zone name, so that what happens
+        without a request (the reminder the evening before an open house) is worked out on the user's
+        own clock. GET /api/users/me returns it as time_zone, null until it was stored.
+      tags:
+        - Users
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - timeZone
+              properties:
+                timeZone:
+                  type: string
+                  maxLength: 64
+                  example: Australia/Brisbane
+      responses:
+        "200":
+          description: Stored, returned as { timeZone }
+        "400":
+          description: Not a time zone name that the server knows
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Not authenticated
 
   /api/properties/search:
     post:
@@ -1053,3 +1102,35 @@ paths:
           description: Only USER accounts have notifications
         "404":
           description: Notification not found
+
+  /api/internal/jobs/schedule-reminders:
+    post:
+      summary: Write the reminders for the open houses that start tomorrow (scheduler only)
+      description: >
+        Called by a scheduler every hour, not by a user. It needs the secret in the x-job-secret
+        header. Without a JOB_SECRET on the server (or with one shorter than 16 characters) the path
+        answers 404. For every user whose clock is past 18:00 it writes one OPEN_HOUSE_REMINDER for
+        each open house they added that starts tomorrow on their own clock (the time zone they
+        reported, or Australia/Brisbane). Running it again writes nothing twice.
+      tags:
+        - Internal
+      security:
+        - jobSecret: []
+      responses:
+        "200":
+          description: How many entries were looked at, how many were due and how many reminders were written
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  candidates:
+                    type: integer
+                  due:
+                    type: integer
+                  created:
+                    type: integer
+        "401":
+          description: Wrong or missing secret
+        "404":
+          description: The jobs are switched off (no JOB_SECRET on the server)
