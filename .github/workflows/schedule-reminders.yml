@@ -8,6 +8,14 @@ on:
     - cron: "7 * * * *"
   workflow_dispatch:
 
+# Nothing here uses the token of the workflow, so it gets none
+permissions: {}
+
+# A run can take minutes (the server may be asleep): the next one waits instead of overlapping
+concurrency:
+  group: schedule-reminders
+  cancel-in-progress: false
+
 jobs:
   run:
     runs-on: ubuntu-latest
