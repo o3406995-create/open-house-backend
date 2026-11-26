@@ -75,3 +75,8 @@ export function startOfNextDay(now: Date, timeZone: string): Date {
   const firstGuess = midnightAsUtc - offsetMs(new Date(midnightAsUtc), timeZone)
   return new Date(midnightAsUtc - offsetMs(new Date(firstGuess), timeZone))
 }
+
+// The hour (0 to 23) on the wall clock of a time zone at one instant
+export function localHour(instant: Date, timeZone: string): number {
+  return wallClock(instant, timeZone).hour
+}

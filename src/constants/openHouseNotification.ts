@@ -4,3 +4,18 @@ export const NEW_OPEN_HOUSE_TYPE = "NEW_OPEN_HOUSE" as const
 export const NOTIFICATION_BATCH_SIZE = 500
 
 export const newOpenHouseMessage = (address: string) => `New open house at ${address}`
+
+// The reminder the evening before an open house
+export const OPEN_HOUSE_REMINDER_TYPE = "OPEN_HOUSE_REMINDER" as const
+
+// A reminder is made once it is this hour or later on the clock of the user
+export const REMINDER_FROM_HOUR = 18
+
+// The evening of any time zone is followed by a day that ends less than two days from now; the
+// extra hours cover a day that is 25 hours long
+export const REMINDER_WINDOW_HOURS = 50
+
+export const UPCOMING_ENTRY_STATUS = "UPCOMING" as const
+export const REMINDER_ROLE = "USER" as const
+
+export const reminderMessage = (address: string) => `Open house tomorrow at ${address}`
