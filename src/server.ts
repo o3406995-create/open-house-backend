@@ -10,6 +10,7 @@ import usersRoutes from "./routes/users.routes.js"
 import propertyRoutes from "./routes/property.routes.js"
 import adminRoutes from "./routes/admin.routes.js"
 import agentPropertyRoutes from "./routes/agentProperty.routes.js"
+import agentPropertyListRoutes from "./routes/agentPropertyList.routes.js"
 import { DEFAULT_CORS_ORIGIN, DEFAULT_PORT } from "./constants/server.js"
 import savedPropertyRoutes from "./routes/savedProperty.routes.js"
 import myOpenHouseRoutes from "./routes/myOpenHouse.routes.js"
@@ -60,6 +61,7 @@ app.use("/api/internal/jobs", internalJobsRoutes)
 app.use("/api/admin", adminRoutes)
 
 app.use("/api/agent", agentPropertyRoutes)
+app.use("/api/agent", agentPropertyListRoutes)
 
 app.use(errorHandler)
 

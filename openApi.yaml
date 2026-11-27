@@ -250,6 +250,25 @@ components:
         property:
           $ref: "#/components/schemas/PropertySummary"
 
+    TrackedPropertyListItem:
+      type: object
+      properties:
+        trackedId:
+          type: integer
+        addedAt:
+          type: string
+          format: date-time
+        saveCount:
+          type: integer
+          description: How many users saved the property
+        openHouseInterestCount:
+          type: integer
+          description: >
+            How many different users added an open house of the property to My Open Houses, all time
+            (a user who added several open houses of it counts once)
+        property:
+          $ref: "#/components/schemas/PropertySummary"
+
     SavedPropertyListItem:
       allOf:
         - $ref: "#/components/schemas/SavedProperty"
@@ -1395,5 +1414,61 @@ paths:
           description: Only AGENT accounts can track properties
         "404":
           description: Property not found
+        "409":
+          description: The account has no agent profile yet
+    get:
+      summary: List the properties that the agent tracks
+      description: >
+        AGENT accounts only, newest first. Each property is the snapshot that was stored (the data
+        source is not asked), with the number of users who saved it, the number of users who added one
+        of its open houses to My Open Houses (all time, each user counted once), and its open houses
+        that are still to come. Only numbers are returned: never a user, a note or any personal
+        information. An account that has no agent profile yet answers 409.
+      tags:
+        - Agent
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: The watchlist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trackedProperties:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TrackedPropertyListItem"
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  pageSize:
+                    type: integer
+        "400":
+          description: Invalid page or pageSize
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Only AGENT accounts have a watchlist
         "409":
           description: The account has no agent profile yet
