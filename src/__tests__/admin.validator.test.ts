@@ -141,3 +141,11 @@ describe("listAgenciesSchema", () => {
     expect(listAgenciesSchema.safeParse(query).success).toBe(false)
   })
 })
+
+describe("createAgentSchema: the e-mail address of the agent", () => {
+  it("is written in small letters and without space at the ends, like at registration", () => {
+    const parsed = createAgentSchema.parse({ ...withAgencyId, email: "  Alex.Morgan@Example.COM " })
+
+    expect(parsed.email).toBe("alex.morgan@example.com")
+  })
+})

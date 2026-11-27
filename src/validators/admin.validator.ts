@@ -61,7 +61,8 @@ export const agencyInputSchema = z.object({
 export const createAgentSchema = z
   .object({
     name: text("name", AGENT_NAME_MAX_LENGTH),
-    email: z.string().email().max(AGENCY_EMAIL_MAX_LENGTH),
+    // Written the way registration and login write it, so that the agent can log in with it
+    email: z.string().trim().toLowerCase().email().max(AGENCY_EMAIL_MAX_LENGTH),
     password: z.string().min(PASSWORD_MIN_LENGTH),
     licenseNumber: text("licenseNumber", AGENT_LICENSE_MAX_LENGTH),
     agencyId: z
