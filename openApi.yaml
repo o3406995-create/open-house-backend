@@ -249,6 +249,7 @@ components:
           format: date-time
         property:
           $ref: "#/components/schemas/PropertySummary"
+
     SavedPropertyListItem:
       allOf:
         - $ref: "#/components/schemas/SavedProperty"
