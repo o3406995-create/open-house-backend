@@ -239,6 +239,16 @@ components:
         property:
           $ref: "#/components/schemas/PropertySummary"
 
+    TrackedProperty:
+      type: object
+      properties:
+        trackedId:
+          type: integer
+        addedAt:
+          type: string
+          format: date-time
+        property:
+          $ref: "#/components/schemas/PropertySummary"
     SavedPropertyListItem:
       allOf:
         - $ref: "#/components/schemas/SavedProperty"
@@ -1325,3 +1335,64 @@ paths:
           description: Not authenticated
         "403":
           description: Not an admin
+
+  /api/agent/my-properties:
+    post:
+      summary: Track a property for analytics
+      description: >
+        AGENT accounts only. Adds any property that a search can find to the watchlist of the agent;
+        it does not have to be the agent's own. The property is looked up through the active provider
+        by externalId (never taken from the request body) and a snapshot is stored locally. Tracking
+        the same property again is not an error and returns the existing record. An account that has
+        no agent profile yet answers 409.
+      tags:
+        - Agent
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - externalId
+              properties:
+                externalId:
+                  type: string
+                  maxLength: 64
+                  pattern: "^[A-Za-z0-9_-]+$"
+                  example: mock-1
+      responses:
+        "201":
+          description: Property tracked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trackedProperty:
+                    $ref: "#/components/schemas/TrackedProperty"
+        "200":
+          description: The agent tracked it already; the existing record is returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trackedProperty:
+                    $ref: "#/components/schemas/TrackedProperty"
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Only AGENT accounts can track properties
+        "404":
+          description: Property not found
+        "409":
+          description: The account has no agent profile yet
