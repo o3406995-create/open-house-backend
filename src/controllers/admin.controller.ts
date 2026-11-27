@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express"
-import { createAgentSchema } from "../validators/admin.validator.js"
+import { createAgentSchema, listAgenciesSchema } from "../validators/admin.validator.js"
 import { adminService } from "../services/admin.service.js"
+import { VALIDATION_ERROR_MESSAGE } from "../constants/property.js"
 
 export const adminController = {
   createAgent: async (req: Request, res: Response, next: NextFunction) => {
@@ -9,13 +10,31 @@ export const adminController = {
 
       if (!parsed.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: VALIDATION_ERROR_MESSAGE,
           errors: parsed.error.flatten().fieldErrors,
         })
       }
 
-      const agent = await adminService.createAgent(parsed.data)
-      return res.status(201).json({ user: agent })
+      const result = await adminService.createAgent(parsed.data)
+      return res.status(201).json(result)
+    } catch (err) {
+      next(err)
+    }
+  },
+
+  listAgencies: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const parsed = listAgenciesSchema.safeParse(req.query)
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: VALIDATION_ERROR_MESSAGE,
+          errors: parsed.error.flatten().fieldErrors,
+        })
+      }
+
+      const result = await adminService.listAgencies(parsed.data)
+      return res.status(200).json(result)
     } catch (err) {
       next(err)
     }
